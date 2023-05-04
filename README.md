@@ -13,10 +13,10 @@ The atmospherics sample generation is made in 4 steps:
 
 ```mermaid
 graph TD
-    A["<b>genie</b>\n fcl/atm-genie.fcl"]
-    B["<b>g4</b> \n standard_g4_dune10kt_1x2x6.fcl"]
-    C["<b>detsim</b> \n standard_detsim_dune10kt_1x2x6.fcl"]
-    D["<b>reco</b>\n standard_reco_atmos_dune10kt_1x2x6"]
+    A["<b>genie</b><br> fcl/atm-genie.fcl"]
+    B["<b>g4</b> <br> standard_g4_dune10kt_1x2x6.fcl"]
+    C["<b>detsim</b> <br> standard_detsim_dune10kt_1x2x6.fcl"]
+    D["<b>reco</b><br> standard_reco_atmos_dune10kt_1x2x6"]
 
     A --> B --> C --> D
 ```
