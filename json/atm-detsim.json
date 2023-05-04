@@ -1,0 +1,9 @@
+{
+  "--group": "dune",
+  "-N": "1000",
+  "--expected-lifetime": "10h",
+  "--memory": "4000",
+  "--timeout": "36h",
+  "--OS": "SL7",
+  "file:///${CWD}/../scripts/atm-detsim.sh": ["50"]
+}

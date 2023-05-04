@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#Generates a tar from your current MRB dev directory
+
+if [[ -z $MRB_INSTALL ]]; then
+	echo "MRB env is not set! Exiting!"
+	exit 0
+fi
+
+PARENT_DIR=$(dirname "${MRB_TOP}")
+MAIN_DIR=$(basename "${MRB_TOP}")
+INSTALL_DIR=$(basename "${MRB_INSTALL}")
+
+
+echo "Writing setup-grid file ${MRB_INSTALL}/setup-grid ..."
+cp ${MRB_INSTALL}/setup ${MRB_INSTALL}/setup-grid
+sed -i "s#${PARENT_DIR}#"'${INPUT_TAR_DIR_LOCAL}#g' ${MRB_INSTALL}/setup-grid
+
+echo "Creating ${MRB_TOP}.tar.gz from ${MRB_INSTALL} ..."
+
+tar --exclude '.git' -C $PARENT_DIR -czf ${MRB_TOP}.tar.gz ${MAIN_DIR}/${INSTALL_DIR}
+
