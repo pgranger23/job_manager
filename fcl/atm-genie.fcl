@@ -9,7 +9,7 @@ physics.producers.generator.AtmoEmin: 0.1
 physics.producers.generator.AtmoEmax: 100 
 physics.producers.generator.ForceApplyFlxWgt: true
 
-physics.producers.generator.FluxSearchPaths: "."                                                        
+physics.producers.generator.FluxSearchPaths: "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/TaskForce_Flux/atmos/Honda_interp/"                                                        
 physics.producers.generator.FluxFiles: [
     "honda_2d_homestake_2015_numu.root",
     "honda_2d_homestake_2015_numu.root",
