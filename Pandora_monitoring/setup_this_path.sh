@@ -1,0 +1,2 @@
+export FW_SEARCH_PATH=$( pwd ):$FW_SEARCH_PATH
+export FHICL_FILE_PATH=$( pwd ):$FHICL_FILE_PATH

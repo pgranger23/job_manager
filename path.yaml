@@ -1,0 +1,24 @@
+---
+path:
+  - name:   GENIE
+    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/genie
+    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-genie.json
+
+  - name:   Geant4
+    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/g4
+    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-g4.json
+
+  - name:   Detsim
+    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/detsim
+    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-detsim.json
+
+  - name:   Reco
+    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/reco
+    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-reco.json
+
+  # - name:   CAFMaker
+  #   odir:   /pnfs/dune/scratch/users/pgranger/new_sample/caf
+  #   script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-caf.json
+
+Nfiles: 200
+

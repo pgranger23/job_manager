@@ -1,6 +1,6 @@
 {
   "--group": "dune",
-  "-N": "1000",
+  "-N": "1",
   "--expected-lifetime": "10h",
   "--memory": "4000",
   "--timeout": "36h",

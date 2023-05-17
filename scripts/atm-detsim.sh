@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-DUNEVERSION=v09_74_01d00
+DUNEVERSION=v09_72_00d00
 DUNEQUALIFIER="e20:prof"
 GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/new_sample/"
 STAGE="detsim"
@@ -32,6 +32,19 @@ setup dunesw $DUNEVERSION -q $DUNEQUALIFIER
 
 mkdir -p $WORKDIR && cd $WORKDIR
 
+if [ "$#" -eq 2 ]; then
+	MAP_FILE=$2
+	echo "Using map file $MAP_FILE"
+
+	cp ${CONDOR_DIR_INPUT}/$MAP_FILE .
+
+	LINE=$((PROCESS+1))
+
+	ID=$(sed "${LINE}q;d" $MAP_FILE)
+
+	echo "Processing job with id $ID"
+fi
+
 cp ${CONDOR_DIR_INPUT}/*.fcl . 2>/dev/null || : #Copying fcl files
 
 IFILE_BASENAME=atm_${PREV_STAGE}_${ID}.root
@@ -43,6 +56,8 @@ mkdir -p $IDIR
 LOCAL_IFILE=$LOCAL_IDIR/${IFILE_BASENAME}
 mkdir -p $LOCAL_IDIR
 ifdh cp $IFILE $LOCAL_IFILE
+
+mkdir -p $LOCAL_ODIR
 
 OFILE=$LOCAL_ODIR/atm_${STAGE}_${ID}.root
 
