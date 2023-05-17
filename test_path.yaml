@@ -1,0 +1,8 @@
+---
+path:
+  - name:   Step 1
+    odir:   /pnfs/dune/scratch/users/pgranger/test
+    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/test.json
+
+Nfiles: 2
+

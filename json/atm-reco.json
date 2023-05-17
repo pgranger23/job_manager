@@ -1,14 +1,14 @@
 {
   "--group": "dune",
-  "-N": "1000",
+  "-N": "1",
   "--expected-lifetime": "12h",
   "--memory": "6000",
   "--timeout": "36h",
   "--OS": "SL7",
   "-f": [
-    "dropbox:///dune/app/users/pgranger/atmospherics/test_power_spectrum/andy_pandora/standard_reco_atmos_dune10kt_1x2x6.fcl",
-    "dropbox:///dune/app/users/pgranger/atmospherics/test_power_spectrum/andy_pandora/PandoraSettings_Master_Atmos_Production.xml",
-    "dropbox:///dune/app/users/pgranger/atmospherics/test_power_spectrum/andy_pandora/PandoraSettings_Neutrino_Atmos_Production.xml"
+    "dropbox://${CWD}/../fcl/atm-reco.fcl",
+    "dropbox://${CWD}/../fcl/PandoraSettings_Master_Atmos_Production.xml",
+    "dropbox://${CWD}/../fcl/PandoraSettings_Neutrino_Atmos_Production.xml"
   ],
-  "file:///${CWD}/../scripts/atm-reco.sh": ["50"]
+  "file://${CWD}/../scripts/atm-reco.sh": ["50"]
 }
