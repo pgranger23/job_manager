@@ -1,0 +1,20 @@
+#include "standard_reco_atmos_dune10kt_1x2x6.fcl"
+process_name: EventDisplay
+# Use our custom settings file
+physics.producers.pandora.ConfigFile: "MyPandoraSettings_Master_Atmos_DUNEFD.xml"
+# physics.producers.pandora.ConfigFile: "PandoraSettings_Master_Atmos_Production.xml"
+
+# prevent the drop *_*_*_Reco on the includes
+source.inputCommands: ["keep *_*_*_*"]
+
+# Only run pandora
+physics.eventDisplay: [ pandora ]
+
+physics.trigger_paths: [ eventDisplay ]
+# Don't produce any output ART root files
+physics.end_paths: []
+
+
+# services.Geometry: @local::dune10kt_1x2x6_v4_geo
+
+
