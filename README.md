@@ -7,6 +7,10 @@ This repo contains the scripts that I use for atmospherics neutrino sample gener
 - `scripts`: Contains the scripts to be executed by the jobs at the various steps
 - `json`: Contains the json configuration files used to launch a set of jobs with a specific configuration. To be used with `utils/json_submit`
 
+
+## Production submission script
+The script `utils/chain-submit.sh` allows to send jobs for a whole simulation path can be defined in a yaml file.
+
 ## Generation steps
 
 The atmospherics sample generation is made in 4 steps:
@@ -21,8 +25,10 @@ graph TD
     A --> B --> C --> D
 ```
 
-Each step has to be applied successively by using `utils/json_submit` on the associated json files found in `json`.
-Of course some parameters have to be changed if you want to run this by yourself. For example `GLOBAL_ODIR` can be easily changed in all the scripts files by using:
+This generation process can be made by using `utils/chain-submit.sh`. The `path.yaml` file defines the current simulation chain that is used for the atmospheric neutrinos production.
+
+~~Each step has to be applied successively by using `utils/json_submit` on the associated json files found in `json`.
+Of course some parameters have to be changed if you want to run this by yourself. For example `GLOBAL_ODIR` can be easily changed in all the scripts files by using:~~
 ```bash
 sed -i 's#^GLOBAL_ODIR.*#GLOBAL_ODIR="/pnfs/dune/scratch/users/MY_USERNAME/MY_SAMPLE_NAME/"#g' scripts/*.sh
 ```
