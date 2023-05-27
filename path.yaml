@@ -1,24 +1,49 @@
 ---
 path:
-  - name:   GENIE
-    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/genie
-    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-genie.json
+  - name:         GENIE
+    subdir:       genie2
+    fcl:          ./fcl/atm-genie.fcl
+    local_source: /dune/app/users/pgranger/atmospherics/devGen.tar.gz
+    ofile:        atm_genie2
 
-  - name:   Geant4
-    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/g4
-    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-g4.json
+  - name:         Geant4
+    subdir:       g4
+    fcl:          standard_g4_dune10kt_1x2x6.fcl
+    ofile:        atm_g4
 
-  - name:   Detsim
-    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/detsim
-    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-detsim.json
+  - name:         Detsim
+    subdir:       detsim
+    fcl:          standard_detsim_dune10kt_1x2x6.fcl
+    ofile:        atm_detsim
 
-  - name:   Reco
-    odir:   /pnfs/dune/scratch/users/pgranger/new_sample/reco
-    script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-reco.json
+  - name:         Reco
+    subdir:       reco
+    fcl:          ./fcl/atm-reco.fcl
+    ofile:        atm_reco
+    inputs:
+      - ./fcl/PandoraSettings_Master_Atmos_Production.xml
+      - ./fcl/PandoraSettings_Neutrino_Atmos_Production.xml
+    outputs:
+      - vertices_atmos_dl.root
+      - hierarchy_validation_mc.root
 
-  # - name:   CAFMaker
-  #   odir:   /pnfs/dune/scratch/users/pgranger/new_sample/caf
-  #   script: /dune/app/users/pgranger/atmospherics/atmo_gen/json/atm-caf.json
+  - name:         CAFMaker
+    subdir:       caf
+    fcl:          ./fcl/atm-caf.fcl
+    local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
+    outputs:
+      - caf.root
+      - flatcaf.root
 
-Nfiles: 200
-
+global:
+  nfiles: 1
+  nevents: 2
+  dune_version: v09_72_00d00
+  dune_qual: e20:debug
+  odir: /pnfs/dune/scratch/users/pgranger/tests/
+  job_config:
+    group: dune
+    expected-lifetime: 2h
+    memory: 4000
+    timeout: 2h
+    OS: SL7

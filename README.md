@@ -16,7 +16,7 @@ graph TD
     A["<b>genie</b><br> fcl/atm-genie.fcl"]
     B["<b>g4</b> <br> standard_g4_dune10kt_1x2x6.fcl"]
     C["<b>detsim</b> <br> standard_detsim_dune10kt_1x2x6.fcl"]
-    D["<b>reco</b><br> standard_reco_atmos_dune10kt_1x2x6"]
+    D["<b>reco</b><br> standard_reco_atmos_dune10kt_1x2x6.fcl"]
 
     A --> B --> C --> D
 ```
