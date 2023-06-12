@@ -43,4 +43,12 @@
         <Visualize>false</Visualize>
     </algorithm>
 
+    <algorithm type = "LArHierarchyValidation">
+        <ValidateMC>true</ValidateMC>
+        <WriteTree>true</WriteTree>
+        <FileName>hierarchy_validation_mc.root</FileName>
+        <TreeName>mc</TreeName>
+        <FoldDynamic>true</FoldDynamic>
+    </algorithm>
+
 </pandora>

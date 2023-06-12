@@ -1,6 +1,5 @@
-#include "standard_reco_dune10kt_1x2x6.fcl"
+#include "standard_reco_dunevd10kt_1x6x6.fcl"
 
 process_name: Reco
 physics.producers.pandora.ConfigFile:   "PandoraSettings_Master_Atmos_Production.xml"
 physics.producers.pandora.EnableMCParticles: true
-

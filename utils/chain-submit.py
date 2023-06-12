@@ -160,7 +160,15 @@ class Process:
         for step in self.path:
             files = glob(f"{step.odir}/*.root")
             files = map(os.path.basename, files)
-            numbers_files = [int(re.search(r"_(\d+).root", f).group(1)) for f in files]
+            try:
+                numbers_files = []
+                for f in files:
+                    matches = re.search(r"_(\d+).root", f)
+                    if matches:
+                        numbers_files.append(int(matches.group(1)))
+            except:
+                print(list(files))
+                raise
             numbers_files = [nb for nb in numbers_files if nb < self.N]
             step.status.files = set(numbers_files)
 

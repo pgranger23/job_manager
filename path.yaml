@@ -1,10 +1,10 @@
 ---
 path:
   - name:         GENIE
-    subdir:       genie2
+    subdir:       genie
     fcl:          ./fcl/atm-genie.fcl
     local_source: /dune/app/users/pgranger/atmospherics/devGen.tar.gz
-    ofile:        atm_genie2
+    ofile:        atm_genie
 
   - name:         Geant4
     subdir:       g4
@@ -36,11 +36,11 @@ path:
       - flatcaf.root
 
 global:
-  nfiles: 1
-  nevents: 2
+  nfiles: 1000
+  nevents: 50
   dune_version: v09_72_00d00
   dune_qual: e20:debug
-  odir: /pnfs/dune/scratch/users/pgranger/tests/
+  odir: /pnfs/dune/scratch/users/pgranger/atm_50k/
   job_config:
     group: dune
     expected-lifetime: 2h

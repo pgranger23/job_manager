@@ -32,7 +32,7 @@ cp ${CONDOR_DIR_INPUT}/*.fcl . 2>/dev/null || : #Copying eventual fcl files
 cp ${CONDOR_DIR_INPUT}/*.xml . 2>/dev/null || : #Copying eventual xml files
 cp ${CONDOR_DIR_INPUT}/*.root . 2>/dev/null || : #Copying eventual root files
 
-CMD="lar -c $FCL -n $NEVENTS"
+CMD="lar -c $FCL -n $NEVENTS -e 20000063:$ID:1"
 
 if [ ! -z "$IDIR" ]; then
 	echo "Getting input file from $IDIR"
