@@ -29,7 +29,7 @@ path:
 
   - name:           AnaTree
     subdir:         anatree
-    fcl:            fcl/standard_anatree_dunevd10kt_v4_1x2x6.fcl
+    fcl:            fcl/standard_anatree_dunevd10kt_1x8x6_3view_30deg.fcl
     outputs:
       - ana_tree_vd.root
     local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz

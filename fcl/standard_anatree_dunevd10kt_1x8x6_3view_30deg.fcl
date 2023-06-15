@@ -94,6 +94,8 @@ physics.analyzers.analysistree.FlashMatchAssocLabel: [ "" ]
 
 physics.analyzers.analysistree.SavePFParticleInfo: true
 physics.analyzers.analysistree.PFParticleModuleLabel: "pandora"
+physics.analyzers.analysistree.SimChannelLabel: "elecDrift"
+
 
 
 # apparently, no MCShower or MCTrack on the file
