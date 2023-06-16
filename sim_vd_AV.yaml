@@ -1,0 +1,56 @@
+---
+path:
+  - name:         GENIE
+    subdir:       genie
+    fcl:          ./fcl/atm-genie-vd-AV.fcl
+    local_source: /dune/app/users/pgranger/atmospherics/devGen.tar.gz
+    ofile:        atm_genie
+
+  - name:         Geant4
+    subdir:       g4
+    fcl:          standard_g4_dunevd10kt_1x8x6_3view_30deg.fcl
+    ofile:        atm_g4
+
+  - name:         Detsim
+    subdir:       detsim
+    fcl:          standard_detsim_dunevd10kt_1x8x6_3view_30deg.fcl
+    ofile:        atm_detsim
+
+  - name:         Reco
+    subdir:       reco
+    fcl:          standard_reco_dunevd10kt_1x8x6_3view_30deg.fcl
+    ofile:        atm_reco
+    inputs:
+      - ./fcl/PandoraSettings_Master_Atmos_Production.xml
+      - ./fcl/PandoraSettings_Neutrino_Atmos_Production.xml
+    # outputs:
+    #   - vertices_atmos_dl.root
+    #   - hierarchy_validation_mc.root
+
+  # - name:           AnaTree
+  #   subdir:         anatree
+  #   fcl:            fcl/standard_anatree_dunevd10kt_v4_1x2x6.fcl
+  #   outputs:
+  #     - ana_tree_vd.root
+  #   local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
+
+  - name:         CAFMaker
+    subdir:       caf
+    fcl:          ./fcl/atm-caf.fcl
+    local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
+    outputs:
+      - caf.root
+      - flatcaf.root
+
+global:
+  nfiles: 1000
+  nevents: 5
+  dune_version: v09_72_00d00
+  dune_qual: e20:debug
+  odir: /pnfs/dune/scratch/users/pgranger/atm_50k_vd_AV/
+  job_config:
+    group: dune
+    expected-lifetime: 12h
+    memory: 6000
+    timeout: 12h
+    OS: SL7

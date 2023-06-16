@@ -3,7 +3,7 @@ set -x
 
 DUNEVERSION=v09_72_00d00
 DUNEQUALIFIER="e20:prof"
-GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/new_sample/"
+GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/atm_50k/"
 STAGE="g4"
 PREV_STAGE="genie"
 FCL="standard_g4_dune10kt_1x2x6.fcl"

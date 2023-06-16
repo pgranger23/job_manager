@@ -160,15 +160,11 @@ class Process:
         for step in self.path:
             files = glob(f"{step.odir}/*.root")
             files = map(os.path.basename, files)
-            try:
-                numbers_files = []
-                for f in files:
-                    matches = re.search(r"_(\d+).root", f)
-                    if matches:
-                        numbers_files.append(int(matches.group(1)))
-            except:
-                print(list(files))
-                raise
+            numbers_files = []
+            for f in files:
+                matches = re.search(r"_(\d+).root", f)
+                if matches:
+                    numbers_files.append(int(matches.group(1)))
             numbers_files = [nb for nb in numbers_files if nb < self.N]
             step.status.files = set(numbers_files)
 
@@ -179,7 +175,7 @@ class Process:
             step.status.temp = set(numbers_temp)
 
     def _compute_process(self) -> None:
-        mat = np.ones((self.N, len(self.path)), dtype=np.int)
+        mat = np.ones((self.N, len(self.path)), dtype=int)
         for j, step in enumerate(self.path):
             for i in step.status.files:
                 mat[i, j] = 0
@@ -253,11 +249,11 @@ class Process:
 
     def _submit_job(self, config:Dict) -> int:
         cmd = get_sub_cmd(config, escape_val=True)
-        print(f"Command to execute: {cmd}")
+        logger.info(f"Command to execute: {cmd}")
 
         jobid = "999999.0@test.fnal.gov"
         if not self.dry:
-            print("Calling jobsub with this command")
+            logger.info("Calling jobsub with this command")
             ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             print(ret.stdout)
             ret.check_returncode()
@@ -268,7 +264,7 @@ class Process:
     def submit(self) -> None:
         for step in self.path:
             if step.status.to_process:
-                print(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
+                logger.info(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
                 self._send_jobs(step)
 
 
@@ -281,7 +277,7 @@ class Process:
 
     def display(self, skip_ok:bool = False) -> None:
         for i in range(self.N):
-            if skip_ok and self._get_next_step(i) is None:
+            if skip_ok and np.sum(self.state[i]) == 0: #All files available
                 continue
             line = f"[{i}] =>"
             for j, step in enumerate(self.path):
@@ -362,13 +358,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Restarts failed jobs")
     parser.add_argument('path_file')
     parser.add_argument('action', choices=['send', 'clear', 'dry'])
+    parser.add_argument('--skip-ok', action="store_true", help="Doesn't print the lines when all the files are available for a specific id")
     args = parser.parse_args()
 
     path_file = args.path_file
 
     p = Process(path_file, args.action == 'dry')
     # p.reset_temp()
-    p.display(skip_ok=False)
+    p.display(skip_ok=args.skip_ok)
     p.print_process()
 
     if args.action in ['send', 'dry']:

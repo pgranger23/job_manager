@@ -3,8 +3,8 @@ set -x
 
 DUNEVERSION=v09_72_00d00
 DUNEQUALIFIER="e20:prof"
-GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/new_sample/"
-STAGE="reco"
+GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/atm_50k/"
+STAGE="reco_other"
 PREV_STAGE="detsim"
 FCL="atm-reco.fcl"
 
@@ -61,5 +61,6 @@ mkdir -p $LOCAL_ODIR
 OFILE=$LOCAL_ODIR/atm_${STAGE}_${ID}.root
 
 lar -c $FCL $LOCAL_IFILE -o $OFILE -n $NEVENTS
-test -f $OFILE && ifdh cp $OFILE $FINAL_ODIR/${OFILE_BASENAME}
-ifdh cp vertices_atmos_dl.root ${FINAL_ODIR}/vertices_atmos_dl_${ID}.root
+# test -f $OFILE && ifdh cp $OFILE $FINAL_ODIR/${OFILE_BASENAME}
+# ifdh cp vertices_atmos_dl.root ${FINAL_ODIR}/vertices_atmos_dl_${ID}.root
+ifdh cp hierarchy_validation_mc.root ${FINAL_ODIR}/hierarchy_validation_mc_${ID}.root

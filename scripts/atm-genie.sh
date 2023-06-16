@@ -3,7 +3,7 @@
 
 DUNEVERSION=v09_72_00d00
 DUNEQUALIFIER="e20:debug"
-GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/new_sample/"
+GLOBAL_ODIR="/pnfs/dune/scratch/users/pgranger/tests/"
 STAGE="genie"
 FCL="atm-genie.fcl"
 
