@@ -103,21 +103,23 @@ class Process:
 
     def _chain_io(self):
         for i in range(1, len(self.path)):
-            step = self.path[i]
-            if self.path[i - 1].ofile == "":
+            local_path = self.path[i]
+            if self.path[i - 1][0].ofile == "":
                 logger.critical("All steps except the last of the path must have an output file to ensure the correct input/output chaining, for now.")
                 sys.exit()
 
-            if step.ifile == "":
-                step.ifile = self.path[i - 1].ofile
-            if step.idir == "":
-                step.idir = self.path[i - 1].odir
+            for step in local_path:
+                if step.ifile == "":
+                    step.ifile = self.path[i - 1][0].ofile
+                if step.idir == "":
+                    step.idir = self.path[i - 1][0].odir
 
     def _check_path(self) -> None:
-        for step in self.path:
-            if not os.path.exists(step.odir):
-                logger.critical(f"{step.odir} does not exist!")
-                sys.exit(1)
+        for local_path in self.path:
+            for step in local_path:
+                if not os.path.exists(step.odir):
+                    logger.critical(f"{step.odir} does not exist!")
+                    sys.exit(1)
 
     def _parse_config(self, fname: str) -> None:
         with open(fname) as f:
@@ -144,39 +146,52 @@ class Process:
             sys.exit()
         
         path = []
-        for s in data['path']:
-            step = deepcopy(template_step)
-            step.fill(s)
-            step.validate()
-            step.extend_relative(os.path.dirname(fname))
-            path.append(step)
+        for i, s in enumerate(data['path']):
+            slist = s
+            if not isinstance(slist, list):
+                slist = [s]
+            else:
+                if i != len(data['path']) - 1:
+                    logging.critical("Multiple concurrent steps are only allowed at the end of the path!")
+                    sys.exit()
 
+            local_path = []
+
+            for step_elt in slist:
+                step = deepcopy(template_step)
+                step.fill(step_elt)
+                step.validate()
+                step.extend_relative(os.path.dirname(fname))
+                local_path.append(step)
+            path.append(local_path)
         self.path = path
 
         self._chain_io()
         
 
     def _build_filelists(self) -> None:
-        for step in self.path:
-            files = glob(f"{step.odir}/*.root")
-            files = map(os.path.basename, files)
-            numbers_files = []
-            for f in files:
-                matches = re.search(r"_(\d+).root", f)
-                if matches:
-                    numbers_files.append(int(matches.group(1)))
-            numbers_files = [nb for nb in numbers_files if nb < self.N]
-            step.status.files = set(numbers_files)
+        for local_path in self.path:
+            for step in local_path:
+                files = glob(f"{step.odir}/*.root")
+                files = map(os.path.basename, files)
+                numbers_files = []
+                for f in files:
+                    matches = re.search(r"_(\d+).root", f)
+                    if matches:
+                        numbers_files.append(int(matches.group(1)))
+                numbers_files = [nb for nb in numbers_files if nb < self.N]
+                step.status.files = set(numbers_files)
 
-            temp = glob(f"{step.odir}/*.temp")
-            temp = map(os.path.basename, temp)
-            numbers_temp = [int(re.search(r"(\d+)", f).group(1)) for f in temp]
-            numbers_temp = [nb for nb in numbers_temp if nb < self.N]
-            step.status.temp = set(numbers_temp)
+                temp = glob(f"{step.odir}/*.temp")
+                temp = map(os.path.basename, temp)
+                numbers_temp = [int(re.search(r"(\d+)", f).group(1)) for f in temp]
+                numbers_temp = [nb for nb in numbers_temp if nb < self.N]
+                step.status.temp = set(numbers_temp)
 
     def _compute_process(self) -> None:
-        mat = np.ones((self.N, len(self.path)), dtype=int)
-        for j, step in enumerate(self.path):
+        flat_path = [s for local_path in self.path for s in local_path]
+        mat = np.ones((self.N, len(flat_path)), dtype=int)
+        for j, step in enumerate(flat_path):
             for i in step.status.files:
                 mat[i, j] = 0
             for i in step.status.temp:
@@ -184,9 +199,10 @@ class Process:
         self.state = mat
 
         for i in range(self.N):
-            next_step = self._get_next_step(i)
-            if next_step is not None:
-                next_step.status.to_process.append(i)
+            next_steps = self._get_next_steps(i)
+            if next_steps is not None:
+                for next_step in next_steps:
+                    next_step.status.to_process.append(i)
 
     def _send_jobs(self, step:Step) -> None:
         map_file = self._create_map(step)
@@ -262,50 +278,73 @@ class Process:
 
 
     def submit(self) -> None:
-        for step in self.path:
-            if step.status.to_process:
-                logger.info(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
-                self._send_jobs(step)
+        for local_path in self.path:
+            for step in local_path:
+                if step.status.to_process:
+                    logger.info(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
+                    self._send_jobs(step)
 
 
-    def _get_next_step(self, i) -> Step:
+    def _get_next_steps(self, i:int) -> List[Step]:
         if np.sum(self.state[i]) == 0: #All ok
             return None
-        if 2 in self.state[i]: #Temp file there, a job is in progress
+
+        last_steps = self.path[-1]
+        nb_last_steps = len(last_steps)
+
+        if 2 in self.state[i, :-nb_last_steps]: #Temp file before the last steps there, a job is in progress
             return None
-        return self.path[np.argmax(self.state[i] == 1)]
+        
+        first_valid_step = np.argmax(self.state[i] == 1)
+
+        flat_path = [s for local_path in self.path for s in local_path]
+
+        if first_valid_step >= self.state.shape[1] - nb_last_steps: #The first valid step is part of the last meta-step
+            valid_steps = np.flatnonzero(self.state[i, :] == 1)
+            return [flat_path[step] for step in valid_steps]
+        else:
+            return [flat_path[first_valid_step]]
 
     def display(self, skip_ok:bool = False) -> None:
         for i in range(self.N):
+            idx = 0
             if skip_ok and np.sum(self.state[i]) == 0: #All files available
                 continue
             line = f"[{i}] =>"
-            for j, step in enumerate(self.path):
-                color = colormap[self.state[i, j]]
-                line += f" {color}{step.name}{bcolors.ENDC}"
+            for local_path in self.path:
+                if len(local_path) > 1:
+                    line += " {"
+                for step in local_path:
+                    color = colormap[self.state[i, idx]]
+                    line += f" {color}{step.name}{bcolors.ENDC}"
+                    idx += 1
+                if len(local_path) > 1:
+                    line += " }"
             print(line)
 
     def print_process(self) -> None:
-        for step in self.path:
-            print(f"{step.name} => {step.status.to_process}")
+        for local_path in self.path:
+            for step in local_path:
+                print(f"{step.name} => {step.status.to_process}")
             
 
     def _clear_temp(self, full:bool = False) -> None:
-        for step in self.path:
-            if full:
-                new_files = step.status.temp
-            else:
-                new_files = step.status.temp.intersection(step.status.files)
-            if new_files:
-                for i in new_files:
-                    fname = f"{step.odir}/{i}.temp"
-                    if not self.dry:
-                        os.remove(fname)
-                    # else:
-                    #     print(f"Would remove {fname}")
-                
-                step.status.temp = step.status.temp - new_files
-                print(f"Cleaned {len(new_files)} temp files for step {step.name}")
+        for local_path in self.path:
+            for step in local_path:
+                if full:
+                    new_files = step.status.temp
+                else:
+                    new_files = step.status.temp.intersection(step.status.files)
+                if new_files:
+                    for i in new_files:
+                        fname = f"{step.odir}/{i}.temp"
+                        if not self.dry:
+                            os.remove(fname)
+                        # else:
+                        #     print(f"Would remove {fname}")
+                    
+                    step.status.temp = step.status.temp - new_files
+                    print(f"Cleaned {len(new_files)} temp files for step {step.name}")
 
     def _create_temp(self, step:Step, i:int, jobid:str) -> None:
         if not self.dry:
