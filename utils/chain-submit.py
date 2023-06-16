@@ -277,12 +277,13 @@ class Process:
         return jobid
 
 
-    def submit(self) -> None:
+    def submit(self, to_process:List[str] = []) -> None:
         for local_path in self.path:
             for step in local_path:
-                if step.status.to_process:
-                    logger.info(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
-                    self._send_jobs(step)
+                if (not to_process) or (step.name in to_process):
+                    if step.status.to_process:
+                        logger.info(f"Going to submit {len(step.status.to_process)} jobs for step {step.name}")
+                        self._send_jobs(step)
 
 
     def _get_next_steps(self, i:int) -> List[Step]:
@@ -328,23 +329,24 @@ class Process:
                 print(f"{step.name} => {step.status.to_process}")
             
 
-    def _clear_temp(self, full:bool = False) -> None:
+    def _clear_temp(self, full:bool = False, to_process:List[str] = []) -> None:
         for local_path in self.path:
             for step in local_path:
-                if full:
-                    new_files = step.status.temp
-                else:
-                    new_files = step.status.temp.intersection(step.status.files)
-                if new_files:
-                    for i in new_files:
-                        fname = f"{step.odir}/{i}.temp"
-                        if not self.dry:
-                            os.remove(fname)
-                        # else:
-                        #     print(f"Would remove {fname}")
-                    
-                    step.status.temp = step.status.temp - new_files
-                    print(f"Cleaned {len(new_files)} temp files for step {step.name}")
+                if to_process and step.name in to_process:
+                    if full:
+                        new_files = step.status.temp
+                    else:
+                        new_files = step.status.temp.intersection(step.status.files)
+                    if new_files:
+                        for i in new_files:
+                            fname = f"{step.odir}/{i}.temp"
+                            if not self.dry:
+                                os.remove(fname)
+                            # else:
+                            #     print(f"Would remove {fname}")
+                        
+                        step.status.temp = step.status.temp - new_files
+                        print(f"Cleaned {len(new_files)} temp files for step {step.name}")
 
     def _create_temp(self, step:Step, i:int, jobid:str) -> None:
         if not self.dry:
@@ -386,28 +388,40 @@ class Process:
             fname = handle.name
         return fname
 
-    def reset_temp(self) -> None:
-        self._clear_temp(full=True)
+    def reset_temp(self, to_process:List[str]) -> None:
+        self._clear_temp(full=True, to_process=to_process)
 
     def _extract_jobid(self, stdout) -> str:
         expr = r'\d+\.\d+@.*\.fnal\.gov'
         return re.search(expr, stdout).group(0)
+
+    def check_steps_exist(self, to_process:List[str]):
+        available_steps = [step.name for local_path in self.path for step in local_path]
+        for s in to_process:
+            if s not in available_steps:
+                logging.critical(f"Step {s} does not exist")
+                sys.exit()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Restarts failed jobs")
     parser.add_argument('path_file')
     parser.add_argument('action', choices=['send', 'clear', 'dry'])
     parser.add_argument('--skip-ok', action="store_true", help="Doesn't print the lines when all the files are available for a specific id")
+    parser.add_argument('--steps', nargs='*', action='store', help="List of steps on which to apply the given action")
     args = parser.parse_args()
 
     path_file = args.path_file
 
     p = Process(path_file, args.action == 'dry')
+
+    if args.steps: #Check that only valid steps are given
+        p.check_steps_exist(args.steps)
+
     # p.reset_temp()
     p.display(skip_ok=args.skip_ok)
     p.print_process()
 
     if args.action in ['send', 'dry']:
-        p.submit()
+        p.submit(to_process=args.steps)
     elif args.action == 'clear':
-        p.reset_temp()
+        p.reset_temp(to_process=args.steps)
