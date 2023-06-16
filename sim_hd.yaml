@@ -27,9 +27,18 @@ path:
       - vertices_atmos_dl.root
       - hierarchy_validation_mc.root
 
+  - name:           AnaTree
+    subdir:         anatree
+    fcl:            fcl/standard_anatree_dunehd10kt_v4_1x2x6.fcl
+    outputs:
+      - ana_tree_hd.root
+    local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
+
   - name:         CAFMaker
-    subdir:       caf
+    subdir:       caf_angle
     fcl:          ./fcl/atm-caf.fcl
+    idir:         /pnfs/dune/scratch/users/pgranger/atm_50k/reco/
+    ifile:        atm_reco
     local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
     outputs:
       - caf.root

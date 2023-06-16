@@ -1,1 +1,5 @@
 test/
+*.root
+*.pyc
+*.tgz
+*.tbz2

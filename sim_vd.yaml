@@ -34,13 +34,13 @@ path:
       - ana_tree_vd.root
     local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
 
-  # - name:         CAFMaker
-  #   subdir:       caf
-  #   fcl:          ./fcl/atm-caf.fcl
-  #   local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
-  #   outputs:
-  #     - caf.root
-  #     - flatcaf.root
+  - name:         CAFMaker
+    subdir:       caf
+    fcl:          ./fcl/atm-caf.fcl
+    local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
+    outputs:
+      - caf.root
+      - flatcaf.root
 
 global:
   nfiles: 1000
