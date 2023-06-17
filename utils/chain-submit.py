@@ -322,6 +322,7 @@ class Process:
                 if len(local_path) > 1:
                     line += " }"
             print(line)
+        print(f"Legend: {colormap[0]}Processed{bcolors.ENDC} {colormap[2]}Running{bcolors.ENDC} {colormap[1]}Missing{bcolors.ENDC}")
 
     def print_process(self) -> None:
         for local_path in self.path:
@@ -332,7 +333,7 @@ class Process:
     def _clear_temp(self, full:bool = False, to_process:List[str] = []) -> None:
         for local_path in self.path:
             for step in local_path:
-                if to_process and step.name in to_process:
+                if not to_process or step.name in to_process:
                     if full:
                         new_files = step.status.temp
                     else:
@@ -388,7 +389,7 @@ class Process:
             fname = handle.name
         return fname
 
-    def reset_temp(self, to_process:List[str]) -> None:
+    def reset_temp(self, to_process:List[str] = []) -> None:
         self._clear_temp(full=True, to_process=to_process)
 
     def _extract_jobid(self, stdout) -> str:
