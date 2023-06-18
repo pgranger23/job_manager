@@ -287,12 +287,12 @@ class Process:
 
 
     def _get_next_steps(self, i:int) -> List[Step]:
-        if np.sum(self.state[i]) == 0: #All ok
+        if np.sum(self.state[i] ==  1) == 0: #Nothing to do
             return None
 
         last_steps = self.path[-1]
         nb_last_steps = len(last_steps)
-
+        
         if 2 in self.state[i, :-nb_last_steps]: #Temp file before the last steps there, a job is in progress
             return None
         
