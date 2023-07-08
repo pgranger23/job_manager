@@ -93,10 +93,13 @@ class Step:
                 setattr(self, key, abs_path)
 
 class Process:
-    def __init__(self, path_file:str, dry=False):
+    def __init__(self, path_file:str, dry=False, new=False):
         self.dry = dry
+        self.new = new
         self._parse_config(path_file)
         self._check_path()
+        if self.new:
+            self._build_path()
         self._build_filelists()
         self._clear_temp()
         self._compute_process()
@@ -117,9 +120,14 @@ class Process:
     def _check_path(self) -> None:
         for local_path in self.path:
             for step in local_path:
-                if not os.path.exists(step.odir):
-                    logger.critical(f"{step.odir} does not exist!")
+                if os.path.exists(step.odir) == self.new: #Equiv to XOR
+                    logger.critical(f"{step.odir} does {'already' if self.new else 'not'} exist!")
                     sys.exit(1)
+    def _build_path(self) -> None:
+        for local_path in self.path:
+            for step in local_path:
+                os.makedirs(step.odir)
+        logger.info("Correctly built the new tree structure!")
 
     def _parse_config(self, fname: str) -> None:
         with open(fname) as f:
@@ -403,17 +411,26 @@ class Process:
                 logging.critical(f"Step {s} does not exist")
                 sys.exit()
 
+    def _read_jids(self, step):
+        tmp_files = [f"{step.odir}/{i}.temp" for i in step.temp]
+        for tmp in tmp_files:
+            with open(tmp, 'r') as tmp:
+                jid = tmp.readline()
+            print(jid)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Restarts failed jobs")
     parser.add_argument('path_file')
-    parser.add_argument('action', choices=['send', 'clear', 'dry'])
+    parser.add_argument('action', choices=['send', 'clear', 'dry', 'test', 'new'])
     parser.add_argument('--skip-ok', action="store_true", help="Doesn't print the lines when all the files are available for a specific id")
     parser.add_argument('--steps', nargs='*', action='store', help="List of steps on which to apply the given action")
     args = parser.parse_args()
 
     path_file = args.path_file
 
-    p = Process(path_file, args.action == 'dry')
+    new = (args.action == 'new')
+
+    p = Process(path_file, args.action == 'dry', new)
 
     if args.steps: #Check that only valid steps are given
         p.check_steps_exist(args.steps)
@@ -426,3 +443,6 @@ if __name__ == '__main__':
         p.submit(to_process=args.steps)
     elif args.action == 'clear':
         p.reset_temp(to_process=args.steps)
+    elif args.action == 'test':
+        for step in p.path:
+            p._read_jids(step)

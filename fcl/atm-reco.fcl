@@ -4,3 +4,8 @@ process_name: Reco
 physics.producers.pandora.ConfigFile:   "PandoraSettings_Master_Atmos_Production.xml"
 physics.producers.pandora.EnableMCParticles: true
 
+
+services.BackTrackerService.BackTracker.G4ModuleLabel: "elecDrift"
+services.ParticleInventoryService.ParticleInventory.G4ModuleLabel: "elecDrift"
+physics.producers.pandora.GeantModuleLabel: "elecDrift"
+

@@ -36,7 +36,7 @@
         <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
     </algorithm>
 
-    <algorithm type = "LArVertexMonitoring">
+    <!-- <algorithm type = "LArVertexMonitoring">
         <WriteFile>true</WriteFile>
         <Filename>vertices_atmos_dl.root</Filename>
         <Treename>vertices</Treename>
@@ -49,6 +49,6 @@
         <FileName>hierarchy_validation_mc.root</FileName>
         <TreeName>mc</TreeName>
         <FoldDynamic>true</FoldDynamic>
-    </algorithm>
+    </algorithm> -->
 
 </pandora>

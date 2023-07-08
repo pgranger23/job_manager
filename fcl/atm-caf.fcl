@@ -37,8 +37,8 @@ physics:
  producers:{
    mvaselectnue:   @local::dunefd_mvaselect
    mvaselectnumu:  @local::dunefd_mvaselect
-   energyreconue:  @local::dunefd_nuenergyreco_pmtrack
-   energyreconumu: @local::dunefd_nuenergyreco_pmtrack
+   energyreconue:  @local::dunefd_nuenergyreco_pandora_nue
+   energyreconumu: @local::dunefd_nuenergyreco_pandora_numu
    cvnmap: @local::standard_cvnmapper
    cvneval: @local::standard_cvnevaluator
    regcnnmap:      @local::standard_regcnnmapper
@@ -90,8 +90,8 @@ physics.producers.mvaselectnue.Select:  "nue"
 physics.producers.mvaselectnumu.Select: "numu"
 
 # 1 = longest reco track + hadronic, 2 = reco shower with highest charge + hadronic, 3 = all hit charges
-physics.producers.energyreconue.RecoMethod:   2
-physics.producers.energyreconumu.RecoMethod:  1
+# physics.producers.energyreconue.RecoMethod:   2
+# physics.producers.energyreconumu.RecoMethod:  1
 
 physics.producers.mvaselectnue.WeightFile:   "MVASelect/v2.2/TMVAClassification_BDTG.nue.weights.xml"
 physics.producers.mvaselectnumu.WeightFile:  "MVASelect/v2.2/TMVAClassification_BDTG.numu.weights.xml"
