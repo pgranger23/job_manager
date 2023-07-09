@@ -15,6 +15,8 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 import logging
 from copy import deepcopy, copy
+from get_jobs import create_connection, create_database, read_database, save_database, get_finished
+import pandas as pd
 import pprint
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
@@ -72,7 +74,8 @@ class Step:
             if isinstance(fields[key], dict):
                 d = getattr(self, key)
                 d.update(val)
-            setattr(self, key, val)
+            else:
+                setattr(self, key, val)
 
     def validate(self) -> None:
         mandatory = ['name', 'fcl', 'odir', 'dune_version', 'dune_qual', 'job_config']
@@ -97,12 +100,35 @@ class Process:
         self.dry = dry
         self.new = new
         self._parse_config(path_file)
+        self._open_db()
         self._check_path()
+        self._clean_finished()
         if self.new:
             self._build_path()
         self._build_filelists()
         self._clear_temp()
         self._compute_process()
+
+    def _get_step_by_name(self, name):
+        for local_path in self.path:
+            for step in local_path:
+                if step.name == name:
+                    return step
+        return None
+
+    def _clean_finished(self):
+        finished, new_db = get_finished(self.conn)
+        for i, row in finished.iterrows():
+            step = self._get_step_by_name(row['step'])
+            self._clear_temp_single(step, row['step_id'])
+        logger.info(f"Cleared {len(finished)} finished jobs")
+        self.db = new_db
+        save_database(self.conn, self.db)
+
+    def _open_db(self):
+        self.conn = create_connection(self.db_file)
+        create_database(self.conn)
+        self.db = read_database(self.conn)
 
     def _chain_io(self):
         for i in range(1, len(self.path)):
@@ -139,9 +165,16 @@ class Process:
 
         glob_conf = data['global']
 
-        if 'nfiles' not in glob_conf:
-            logger.critical("Missing field 'nfiles' in 'global' section of config!")
-            sys.exit()
+        for field in ['nfiles']:
+            if field not in glob_conf:
+                logger.critical(f"Missing field '{field}' in 'global' section of config!")
+                sys.exit()
+
+        # if not os.path.exists(glob_conf['odir']):
+        #     logger.critical(f"Odir path {glob_conf['odir']} does not exist!")
+        #     sys.exit()
+        script_file, ext = os.path.splitext(fname)
+        self.db_file = script_file + '.sqlite'
         
         self.N = int(glob_conf['nfiles'])
         glob_conf.pop('nfiles')
@@ -267,9 +300,20 @@ class Process:
         clusterid = jid.split('.')[0]
 
         if not self.dry:
+            new_rows = []
             for i, jid in enumerate(step.status.to_process):
                 cur_jobid = f"{clusterid}.{i}@{server}"
                 self._create_temp(step, jid, cur_jobid)
+                db_row = {
+                    'jobid': cur_jobid,
+                    'status': 'I',
+                    'step': step.name,
+                    'step_id': jid
+                }
+                new_rows.append(db_row)
+            new_rows = pd.DataFrame(new_rows)
+            self.db = pd.concat([self.db, new_rows], ignore_index=True)
+        save_database(self.conn, self.db)
 
     def _submit_job(self, config:Dict) -> int:
         cmd = get_sub_cmd(config, escape_val=True)
@@ -336,8 +380,15 @@ class Process:
         for local_path in self.path:
             for step in local_path:
                 print(f"{step.name} => {step.status.to_process}")
-            
 
+    def _clear_temp_single(self, step, id):
+        fname = f"{step.odir}/{id}.temp"
+        if not self.dry:
+            try:
+                os.remove(fname)
+            except OSError as e:
+                logger.warning(e)
+            
     def _clear_temp(self, full:bool = False, to_process:List[str] = []) -> None:
         for local_path in self.path:
             for step in local_path:
@@ -348,9 +399,7 @@ class Process:
                         new_files = step.status.temp.intersection(step.status.files)
                     if new_files:
                         for i in new_files:
-                            fname = f"{step.odir}/{i}.temp"
-                            if not self.dry:
-                                os.remove(fname)
+                            self._clear_temp_single(step, i)
                             # else:
                             #     print(f"Would remove {fname}")
                         
@@ -411,17 +460,35 @@ class Process:
                 logging.critical(f"Step {s} does not exist")
                 sys.exit()
 
-    def _read_jids(self, step):
-        tmp_files = [f"{step.odir}/{i}.temp" for i in step.temp]
-        for tmp in tmp_files:
-            with open(tmp, 'r') as tmp:
-                jid = tmp.readline()
-            print(jid)
+    def rebuild_db(self):
+        new_rows = []
+        for local_path in p.path:
+            for step in local_path:
+                tmp_files = [f"{step.odir}/{i}.temp" for i in step.status.temp]
+                
+                for i, tmp in zip(step.status.temp, tmp_files):
+                    with open(tmp, 'r') as tmp:
+                        jid = tmp.readline()
+                    db_row = {
+                        'jobid': jid,
+                        'status': 'I',
+                        'step': step.name,
+                        'step_id': i
+                    }
+                    logger.info(jid)
+                    new_rows.append(db_row)
+        self.db = pd.DataFrame(new_rows)
+        logger.info(self.db)
+        save_database(self.conn, self.db)
+        logger.info(f"Rebuild database. Now containing {len(self.db)} entries")
+
+    def close_db(self):
+        self.conn.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Restarts failed jobs")
     parser.add_argument('path_file')
-    parser.add_argument('action', choices=['send', 'clear', 'dry', 'test', 'new'])
+    parser.add_argument('action', choices=['send', 'clear', 'dry', 'rebuild_db', 'new'])
     parser.add_argument('--skip-ok', action="store_true", help="Doesn't print the lines when all the files are available for a specific id")
     parser.add_argument('--steps', nargs='*', action='store', help="List of steps on which to apply the given action")
     args = parser.parse_args()
@@ -443,6 +510,7 @@ if __name__ == '__main__':
         p.submit(to_process=args.steps)
     elif args.action == 'clear':
         p.reset_temp(to_process=args.steps)
-    elif args.action == 'test':
-        for step in p.path:
-            p._read_jids(step)
+    elif args.action == 'rebuild_db':
+        p.rebuild_db()
+    
+    p.close_db()

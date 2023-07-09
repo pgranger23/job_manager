@@ -24,6 +24,7 @@ path:
     job_config:
       expected-lifetime: 15h
       timeout: 15h
+      memory: 8000
 
   - name:         Reco
     subdir:       reco
@@ -40,22 +41,27 @@ path:
     - name:           AnaTree
       subdir:         anatree
       fcl:            fcl/standard_anatree_dunehd10kt_v4_1x2x6.fcl
-      dune_version:   v09_72_00d00
       outputs:
         - ana_tree_hd.root
-      local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
+      # local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
+      local_source:   /dune/app/users/pgranger/CAFMaker_new.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
 
     - name:         CAFMaker
       subdir:       caf
       fcl:          ./fcl/atm-caf.fcl
-      local_source: /dune/app/users/pgranger/CAFMaker.tar.gz
-      dune_version: v09_72_00d00
+      local_source: /dune/app/users/pgranger/CAFMaker_new.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
       outputs:
         - caf.root
         - flatcaf.root
 
 global:
-  nfiles: 10
+  nfiles: 1000
   nevents: 20
   dune_version: v09_75_03d00
   # dune_version: v09_72_00d00
