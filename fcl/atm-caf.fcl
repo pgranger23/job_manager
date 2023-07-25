@@ -105,6 +105,12 @@ physics.analyzers.cafmaker.MakeSystHist:            false
 physics.analyzers.cafmaker.NuECut:                  0.8
 physics.analyzers.cafmaker.NuMuCut:                 0.8
 
+physics.producers.energyreconue.HitLabel: "hitfd"
+physics.producers.energyreconue.HitToSpacePointLabel: "hitfd"
+
+physics.producers.energyreconumu.HitLabel: "hitfd"
+physics.producers.energyreconumu.HitToSpacePointLabel: "hitfd"
+
 # Pull the reco  information from one of the MVA modules, choice is arbitary
 physics.analyzers.cafmaker.MVASelectLabel: "mvaselectnue"
 

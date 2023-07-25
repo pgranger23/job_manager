@@ -381,6 +381,11 @@ class Process:
             for step in local_path:
                 print(f"{step.name} => {step.status.to_process}")
 
+    def print_progress(self) -> None:
+        for local_path in self.path:
+            for step in local_path:
+                print(f"{step.name} => {len(step.status.files)*100./self.N:.2f}%")
+
     def _clear_temp_single(self, step, id):
         fname = f"{step.odir}/{id}.temp"
         if not self.dry:
@@ -505,6 +510,7 @@ if __name__ == '__main__':
     # p.reset_temp()
     p.display(skip_ok=args.skip_ok)
     p.print_process()
+    p.print_progress()
 
     if args.action in ['send', 'dry']:
         p.submit(to_process=args.steps)

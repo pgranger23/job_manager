@@ -1,15 +1,19 @@
 #include "prodgenie_atmnu_max_dune10kt_1x2x6.fcl"
 
+services: {
+    @table::services
+    @table::dunefdvd_1x8x6_3view_30deg_simulation_services
+    NuRandomService: @local::dune_seedservice
+}
+
 physics.producers.generator.EventsPerSpill: 1
 physics.producers.generator.POTPerSpill: 0
 physics.producers.generator.GenFlavors: [-14, 14, 12, -12, 16, -16]
 physics.producers.generator.FluxType: "atmo_POWER"
-physics.producers.generator.SpectralIndex: 2.5
+physics.producers.generator.SpectralIndex: 3.0 
 physics.producers.generator.AtmoEmin: 0.1 
 physics.producers.generator.AtmoEmax: 100 
 physics.producers.generator.ForceApplyFlxWgt: true
-
-services.NuRandomService: @local::dune_seedservice
 
 physics.producers.generator.FluxSearchPaths: "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/TaskForce_Flux/atmos/Honda_interp/"                                                        
 physics.producers.generator.FluxFiles: [
@@ -21,10 +25,34 @@ physics.producers.generator.FluxFiles: [
     "honda_2d_homestake_2015_numu.root"
     ]
 
+# Flux rotation for HD:
+# [
+#   +sin(phi), -cos(phi), +0.000,
+#     +0.000,    +0.000,  +1.000, # new y is old z
+#   -cos(phi), -sin(phi), +0.000  # new z
+# ]
+# Additional rotation for VD:
+# [
+#    0, 1, 0,
+#   -1, 0, 0,
+#    0, 0, 1
+#]
+# Giving a total rotation of:
+# [
+#   +cos(phi), sin(phi), +0.000,
+#     +0.000,    +0.000,  +1.000, # new y is old z
+#   sin(phi), -cos(phi), +0.000  # new z
+# ]
+
 physics.producers.generator: {
     @table::physics.producers.generator
     @table::dune_fd_atmo_flux_rotation_precise
-    FiducialCut: "mbox:-363,-608,-0,363,608,1394"
+    FiducialCut: "mbox:-325,-325,-677,677,0,900"
+    FluxRotValues: [
+    +0.1564, +0.9877, +0.0000,  # new x axis in old coordinates: be nice and fix things (ends up the same)
+    +0.0000, +0.0000, +1.0000,  # new y axis in old coordinates: vertical
+    +0.9877, -0.1564, +0.0000   # new z axis in old coordinates: away from Batavia, IL
+    ]
 }
 
 source.maxEvents: 50

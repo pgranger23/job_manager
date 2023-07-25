@@ -1,4 +1,6 @@
 ---
+&ana_source: /dune/app/users/pgranger/atmospherics/devGen.tar.gz
+
 path:
   - name:         GENIE
     subdir:       genie
@@ -30,6 +32,10 @@ path:
     subdir:       reco
     fcl:          ./fcl/atm-reco.fcl
     ofile:        atm_reco
+    job_config:
+      expected-lifetime: 15h
+      timeout: 15h
+      memory: 8000
     inputs:
       - ./fcl/PandoraSettings_Master_Atmos_Production.xml
       - ./fcl/PandoraSettings_Neutrino_Atmos_Production.xml
@@ -44,7 +50,7 @@ path:
       outputs:
         - ana_tree_hd.root
       # local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
-      local_source:   /dune/app/users/pgranger/CAFMaker_new.tar.gz
+      local_source:   *ana_source
       job_config:
         expected-lifetime: 2h
         timeout: 2h
@@ -52,7 +58,18 @@ path:
     - name:         CAFMaker
       subdir:       caf
       fcl:          ./fcl/atm-caf.fcl
-      local_source: /dune/app/users/pgranger/CAFMaker_new.tar.gz
+      local_source: *ana_source
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      outputs:
+        - caf.root
+        - flatcaf.root
+
+    - name:         CAFMaker_new
+      subdir:       caf_new
+      fcl:          ./fcl/atm-caf.fcl
+      local_source: *ana_source
       job_config:
         expected-lifetime: 2h
         timeout: 2h
@@ -61,12 +78,12 @@ path:
         - flatcaf.root
 
 global:
-  nfiles: 1000
+  nfiles: 7500
   nevents: 20
   dune_version: v09_75_03d00
   # dune_version: v09_72_00d00
   dune_qual: e20:debug
-  odir: /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5/
+  odir: /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5_random/
   job_config:
     group: dune
     expected-lifetime: 6h
