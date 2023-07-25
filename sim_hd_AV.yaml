@@ -1,6 +1,4 @@
 ---
-&ana_source: /dune/app/users/pgranger/atmospherics/devGen.tar.gz
-
 path:
   - name:         GENIE
     subdir:       genie
@@ -50,7 +48,7 @@ path:
       outputs:
         - ana_tree_hd.root
       # local_source:   /dune/app/users/hsouza/analysis_pierre/larsoft.tar.gz
-      local_source:   *ana_source
+      local_source:   /dune/app/users/pgranger/CAFMaker_new.tar.gz
       job_config:
         expected-lifetime: 2h
         timeout: 2h
@@ -58,7 +56,7 @@ path:
     - name:         CAFMaker
       subdir:       caf
       fcl:          ./fcl/atm-caf.fcl
-      local_source: *ana_source
+      local_source: /dune/app/users/pgranger/CAFMaker_new.tar.gz
       job_config:
         expected-lifetime: 2h
         timeout: 2h
@@ -69,7 +67,7 @@ path:
     - name:         CAFMaker_new
       subdir:       caf_new
       fcl:          ./fcl/atm-caf.fcl
-      local_source: *ana_source
+      local_source: /dune/app/users/pgranger/CAFMaker_new.tar.gz
       job_config:
         expected-lifetime: 2h
         timeout: 2h

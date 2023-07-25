@@ -89,7 +89,9 @@ Typically a good practice would be to parallelize as much as possible by trying 
 
 ### Quick note on anchors in yaml
 
-Yaml syntax is globally quite transparent. If you really don't like to repeat yourself, yaml includes a concept of anchors and alias where bits of configuration can be reused in several places in the same file. This is used by defining an anchor with `&` and using it with `*`. More info [here](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors)
+**Does not seem to work at the moment!!!** Maybe requires the yaml loader library.
+
+~~Yaml syntax is globally quite transparent. If you really don't like to repeat yourself, yaml includes a concept of anchors and alias where bits of configuration can be reused in several places in the same file. This is used by defining an anchor with `&` and using it with `*`. More info [here](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors)~~
 
 ### An example of sample generation
 
