@@ -31,6 +31,7 @@ fi
 cp ${CONDOR_DIR_INPUT}/*.fcl . 2>/dev/null || : #Copying eventual fcl files
 cp ${CONDOR_DIR_INPUT}/*.xml . 2>/dev/null || : #Copying eventual xml files
 cp ${CONDOR_DIR_INPUT}/*.root . 2>/dev/null || : #Copying eventual root files
+export FW_SEARCH_PATH=$PWD:$FW_SEARCH_PATH #Necessary for the local path to be searched first for xml files.
 
 CMD="lar -c $FCL -n $NEVENTS -e 20000063:$ID:1"
 

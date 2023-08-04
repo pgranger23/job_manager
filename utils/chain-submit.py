@@ -213,11 +213,11 @@ class Process:
     def _build_filelists(self) -> None:
         for local_path in self.path:
             for step in local_path:
-                files = glob(f"{step.odir}/*.root")
+                files = glob(f"{step.odir}/*_*.*")
                 files = map(os.path.basename, files)
                 numbers_files = []
                 for f in files:
-                    matches = re.search(r"_(\d+).root", f)
+                    matches = re.search(r"_(\d+).\w+", f)
                     if matches:
                         numbers_files.append(int(matches.group(1)))
                 numbers_files = [nb for nb in numbers_files if nb < self.N]
@@ -359,11 +359,13 @@ class Process:
             return [flat_path[first_valid_step]]
 
     def display(self, skip_ok:bool = False) -> None:
+        nprinted = 0
         for i in range(self.N):
             idx = 0
             if skip_ok and np.sum(self.state[i]) == 0: #All files available
                 continue
             line = f"[{i}] =>"
+            nprinted = nprinted + 1
             for local_path in self.path:
                 if len(local_path) > 1:
                     line += " {"
@@ -374,6 +376,9 @@ class Process:
                 if len(local_path) > 1:
                     line += " }"
             print(line)
+            if nprinted == 100:
+                print("..........Stopping the output after 100 lines..........")
+                break
         print(f"Legend: {colormap[0]}Processed{bcolors.ENDC} {colormap[2]}Running{bcolors.ENDC} {colormap[1]}Missing{bcolors.ENDC}")
 
     def print_process(self) -> None:
