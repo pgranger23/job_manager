@@ -3,6 +3,7 @@ from io import StringIO
 import pandas as pd
 import sqlite3
 from sqlite3 import Error
+import os
 
 columns = ['jobid', 'status', 'step', 'step_id']
 
@@ -48,7 +49,7 @@ def parse_output(output):
     return running
 
 def get_jobs():
-    output = subprocess.run(["jobsub_q", "-G", "dune", "pgranger"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = subprocess.run(["jobsub_q", "-G", "dune", os.getlogin()], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return parse_output(output.stdout.decode("utf-8"))
 
 def get_finished(conn):
