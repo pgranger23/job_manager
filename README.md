@@ -13,7 +13,7 @@ The script `utils/chain-submit.py` allows to send jobs for a whole simulation pa
 
 Here is how this script works:
 
-1. A yaml configuration file describing the sample production is provided (exlicit configuration described later).
+1. A yaml configuration file describing the sample production is provided (explicit configuration described later).
 2. The script builds a representation of the sample production cteps in a chained way.
 3. Output files are looked for in the relevant output folders to assess which files are available for each step and deduce what are the next jobs to send with a ready input; no output; and no already running job for this file and step.
 4. For each step, the jobs that can be started (meeting the previously described criteria) are sent to the grid using the `jobsub_submit` script available an Fermilab.
@@ -43,9 +43,10 @@ optional arguments:
 ```
 
 The script has to be executed with one of these available options:
-- **send** : used to actually send the jobs. This is the main command to use when you are sure of what you are going to run.
-- **clear** : used to clear the temporary files that indicate that jobs are running. Was useful to deal with failed jobs manually. Should not be necessary anymore as the failed jobs are automatically dealt with now.
-- **dry** : simulates a job sending **without actually doing it**. Is very useful to test what will be executed by the code without actually doing anything.
+- **path_file**: Is your Yaml configuration file with path
+- **send** : Used to actually send the jobs. This is the main command to use when you are sure of what you are going to run.
+- **clear** : Used to clear the temporary files that indicate that jobs are running. Was useful to deal with failed jobs manually. Should not be necessary anymore as the failed jobs are automatically dealt with now.
+- **dry** : Simulates a job sending **without actually doing it**. Is very useful to test what will be executed by the code without actually doing anything.
 - **rebuild_db** : Is used to recompute the file/step <--> jobid db association. Should not be used in normal operations.
 - **new** : Automatically created the output tree structure for the sample to be produced.
 
