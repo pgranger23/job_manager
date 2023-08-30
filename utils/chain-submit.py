@@ -217,7 +217,7 @@ class Process:
                 files = map(os.path.basename, files)
                 numbers_files = []
                 for f in files:
-                    matches = re.search(r"_(\d+).\w+", f)
+                    matches = re.search(r"_(\d+)\.\w+", f)
                     if matches:
                         numbers_files.append(int(matches.group(1)))
                 numbers_files = [nb for nb in numbers_files if nb < self.N]
