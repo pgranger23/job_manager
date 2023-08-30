@@ -32,6 +32,7 @@ cp ${CONDOR_DIR_INPUT}/*.fcl . 2>/dev/null || : #Copying eventual fcl files
 cp ${CONDOR_DIR_INPUT}/*.xml . 2>/dev/null || : #Copying eventual xml files
 cp ${CONDOR_DIR_INPUT}/*.root . 2>/dev/null || : #Copying eventual root files
 export FW_SEARCH_PATH=$PWD:$FW_SEARCH_PATH #Necessary for the local path to be searched first for xml files.
+export FHICL_FILE_PATH=$PWD:$FHICL_FILE_PATH #Make sure that the local path to be searched first for fcl files.
 
 CMD="lar -c $FCL -n $NEVENTS -e 20000063:$ID:1"
 
@@ -69,8 +70,9 @@ fi
 
 if [ ! -z "$ADDITIONAL_OUTPUTS" ]; then
 	for ADDITIONAL_OUTPUT in ${ADDITIONAL_OUTPUTS[@]}; do #Copies eventual additional files
-		EXTENSION="${ADDITIONAL_OUTPUT##*.}"
-		FNAME="${ADDITIONAL_OUTPUT%.*}"
+		ADDITIONAL_OUTPUT_FNAME=$(basename ${ADDITIONAL_OUTPUT})
+		EXTENSION="${ADDITIONAL_OUTPUT_FNAME#*.}"
+		FNAME="${ADDITIONAL_OUTPUT_FNAME%%.*}"
 
 		OFILE=$ODIR/${FNAME}_${ID}.${EXTENSION}
 
