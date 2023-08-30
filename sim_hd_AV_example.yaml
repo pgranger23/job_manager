@@ -1,0 +1,42 @@
+---
+path:
+
+  -
+    - name:           AnaTree
+      subdir:         anatree
+      fcl:            fcl/standard_anatree_dunehd10kt_v4_1x2x6.fcl
+      idir: /pnfs/dune/persistent/users/iluvatar/my_awesome_atm_prod/reco/
+      ifile: atm_reco
+      outputs:
+        - ana_tree_hd.root
+      local_source:   /dune/app/users/morgoth/better_ana_and_caf/larsoft.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+
+    - name:         CAFMaker
+      subdir:       caf
+      fcl:          ./fcl/atm-caf.fcl
+      idir: /pnfs/dune/persistent/users/iluvatar/my_awesome_atm_prod/reco/
+      ifile: atm_reco
+      local_source:   /dune/app/users/morgoth/better_ana_and_caf/larsoft.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      outputs:
+        - caf.root
+        - flatcaf.root
+
+
+global:
+  nfiles: 5000
+  nevents: 20
+  dune_version: v09_75_03d00
+  dune_qual: e20:debug
+  odir: /pnfs/dune/scratch/users/morgoth/better_ana_and_caf/
+  job_config:
+    group: dune
+    expected-lifetime: 6h
+    memory: 4000
+    timeout: 6h
+    OS: SL7
