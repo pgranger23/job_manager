@@ -6,6 +6,7 @@
 #include "RegCNNMapper.fcl"
 #include "RegCNNEvaluator.fcl"
 #include "energyreco.fcl"
+#include "mach3_systs.fcl"
 
 process_name: Cafana2
 
@@ -39,6 +40,7 @@ physics:
    mvaselectnumu:  @local::dunefd_mvaselect
    energyreconue:  @local::dunefd_nuenergyreco_pandora_nue
    energyreconumu: @local::dunefd_nuenergyreco_pandora_numu
+   energyreconc: @local::dunefd_nuenergyreco_pandora_nc
    cvnmap: @local::standard_cvnmapper
    cvneval: @local::standard_cvnevaluator
    regcnnmap:      @local::standard_regcnnmapper
@@ -55,7 +57,7 @@ physics:
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- prod: [mvaselectnue, energyreconue, mvaselectnumu, energyreconumu, cvnmap, cvneval, regcnnmap, regcnneval]
+ prod: [mvaselectnue, energyreconue, mvaselectnumu, energyreconumu, energyreconc, cvnmap, cvneval, regcnnmap, regcnneval]
  caf:  [ cafmaker]
  trigger_paths: [prod] 
 
@@ -81,6 +83,7 @@ outputs:
 }
 
 services.Geometry: @local::dune10kt_1x2x6_geo
+# services.Geometry: @local::dune10kt_1x2x6_refactored_geo
 
 
 physics.producers.mvaselectnue.MVAMethod:  "BDTG"
@@ -90,13 +93,15 @@ physics.producers.mvaselectnue.Select:  "nue"
 physics.producers.mvaselectnumu.Select: "numu"
 
 # 1 = longest reco track + hadronic, 2 = reco shower with highest charge + hadronic, 3 = all hit charges
-# physics.producers.energyreconue.RecoMethod:   2
-# physics.producers.energyreconumu.RecoMethod:  1
+physics.producers.energyreconue.RecoMethod:   2
+physics.producers.energyreconumu.RecoMethod:  1
+physics.producers.energyreconc.RecoMethod:  3
 
 physics.producers.mvaselectnue.WeightFile:   "MVASelect/v2.2/TMVAClassification_BDTG.nue.weights.xml"
 physics.producers.mvaselectnumu.WeightFile:  "MVASelect/v2.2/TMVAClassification_BDTG.numu.weights.xml"
 
 
+physics.analyzers.cafmaker.CreateFlatCAF:           false
 physics.analyzers.cafmaker.MakeWeightTree:          false
 physics.analyzers.cafmaker.Reweight:                false
 physics.analyzers.cafmaker.MakeAnaTree:             false
@@ -104,12 +109,20 @@ physics.analyzers.cafmaker.MakeSystHist:            false
 
 physics.analyzers.cafmaker.NuECut:                  0.8
 physics.analyzers.cafmaker.NuMuCut:                 0.8
+physics.analyzers.cafmaker.generated_systematic_provider_configuration: @local::generated_systematic_provider_configuration
+# physics.analyzers.cafmaker.generated_systematic_provider_configuration.GENIEReWeight_DUNE_TDR_Splines.tool_options.genie_tune_name: "G18_02a_00_000"
 
 physics.producers.energyreconue.HitLabel: "hitfd"
+physics.producers.energyreconue.WireLabel: "tpcrawdecoder:gauss"
 physics.producers.energyreconue.HitToSpacePointLabel: "hitfd"
 
 physics.producers.energyreconumu.HitLabel: "hitfd"
+physics.producers.energyreconumu.WireLabel: "tpcrawdecoder:gauss"
 physics.producers.energyreconumu.HitToSpacePointLabel: "hitfd"
+
+physics.producers.energyreconc.HitLabel: "hitfd"
+physics.producers.energyreconc.WireLabel: "tpcrawdecoder:gauss"
+physics.producers.energyreconc.HitToSpacePointLabel: "hitfd"
 
 # Pull the reco  information from one of the MVA modules, choice is arbitary
 physics.analyzers.cafmaker.MVASelectLabel: "mvaselectnue"

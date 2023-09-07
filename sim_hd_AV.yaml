@@ -78,6 +78,7 @@ path:
     - name:         Training_extract
       subdir:       training
       fcl:          ./fcl/atm-training-extract.fcl
+      local_source: /dune/app/users/pgranger/pandora_dl.tar.gz
       job_config:
         expected-lifetime: 2h
         timeout: 2h
@@ -88,6 +89,19 @@ path:
         - training_CaloHitListU.csv
         - training_CaloHitListV.csv
         - training_CaloHitListW.csv
+
+    - name:         Export_rings
+      subdir:       rings
+      fcl:          ./fcl/atm-export-rings.fcl
+      local_source: /dune/app/users/pgranger/pandora_dl.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      inputs:
+        - ./fcl/PandoraSettings_Neutrino_Export.xml
+        - ./fcl/PandoraSettings_Master_Export.xml
+      outputs:
+        - rings.dat
 
 global:
   nfiles: 500

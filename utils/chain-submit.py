@@ -44,7 +44,7 @@ colormap = {
 @dataclass
 class StepStatus:
     files: Set[int] = field(default_factory=set)
-    temp: Set[int] = field(default_factory=set)
+    ongoing: Set[int] = field(default_factory=set)
     to_process: List[int] = field(default_factory=list)
 
 @dataclass
@@ -96,7 +96,7 @@ class Step:
                 setattr(self, key, abs_path)
 
 class Process:
-    def __init__(self, path_file:str, dry=False, new=False):
+    def __init__(self, path_file:str, dry:bool=False, new:bool=False):
         self.dry = dry
         self.new = new
         self._parse_config(path_file)
@@ -106,10 +106,19 @@ class Process:
         if self.new:
             self._build_path()
         self._build_filelists()
-        self._clear_temp()
+        self._get_ongoing()
         self._compute_process()
 
-    def _get_step_by_name(self, name):
+    def _get_ongoing(self):
+        ongoing = self.db[self.db.status != 'H']
+        for local_path in self.path:
+            for step in local_path:
+                numbers_files = ongoing[ongoing.step == step.name]['step_id'].tolist()
+                numbers_files = [nb for nb in numbers_files if nb < self.N]
+                step.status.ongoing = set(numbers_files)
+
+
+    def _get_step_by_name(self, name:str):
         for local_path in self.path:
             for step in local_path:
                 if step.name == name:
@@ -118,9 +127,6 @@ class Process:
 
     def _clean_finished(self):
         finished, new_db = get_finished(self.conn)
-        for i, row in finished.iterrows():
-            step = self._get_step_by_name(row['step'])
-            self._clear_temp_single(step, row['step_id'])
         logger.info(f"Cleared {len(finished)} finished jobs")
         self.db = new_db
         save_database(self.conn, self.db)
@@ -223,19 +229,13 @@ class Process:
                 numbers_files = [nb for nb in numbers_files if nb < self.N]
                 step.status.files = set(numbers_files)
 
-                temp = glob(f"{step.odir}/*.temp")
-                temp = map(os.path.basename, temp)
-                numbers_temp = [int(re.search(r"(\d+)", f).group(1)) for f in temp]
-                numbers_temp = [nb for nb in numbers_temp if nb < self.N]
-                step.status.temp = set(numbers_temp)
-
     def _compute_process(self) -> None:
         flat_path = [s for local_path in self.path for s in local_path]
         mat = np.ones((self.N, len(flat_path)), dtype=int)
         for j, step in enumerate(flat_path):
             for i in step.status.files:
                 mat[i, j] = 0
-            for i in step.status.temp:
+            for i in step.status.ongoing:
                 mat[i, j] = 2
         self.state = mat
 
@@ -303,10 +303,9 @@ class Process:
             new_rows = []
             for i, jid in enumerate(step.status.to_process):
                 cur_jobid = f"{clusterid}.{i}@{server}"
-                self._create_temp(step, jid, cur_jobid)
                 db_row = {
                     'jobid': cur_jobid,
-                    'status': 'I',
+                    'status': 'R',
                     'step': step.name,
                     'step_id': jid
                 }
@@ -391,37 +390,6 @@ class Process:
             for step in local_path:
                 print(f"{step.name} => {len(step.status.files)*100./self.N:.2f}%")
 
-    def _clear_temp_single(self, step, id):
-        fname = f"{step.odir}/{id}.temp"
-        if not self.dry:
-            try:
-                os.remove(fname)
-            except OSError as e:
-                logger.warning(e)
-            
-    def _clear_temp(self, full:bool = False, to_process:List[str] = []) -> None:
-        for local_path in self.path:
-            for step in local_path:
-                if not to_process or step.name in to_process:
-                    if full:
-                        new_files = step.status.temp
-                    else:
-                        new_files = step.status.temp.intersection(step.status.files)
-                    if new_files:
-                        for i in new_files:
-                            self._clear_temp_single(step, i)
-                            # else:
-                            #     print(f"Would remove {fname}")
-                        
-                        step.status.temp = step.status.temp - new_files
-                        print(f"Cleaned {len(new_files)} temp files for step {step.name}")
-
-    def _create_temp(self, step:Step, i:int, jobid:str) -> None:
-        if not self.dry:
-            fname = f"{step.odir}/{i}.temp"
-            with open(fname, 'a') as f:
-                f.write(jobid)
-
     def _create_map(self, step:Step) -> str:
         with NamedTemporaryFile(mode='w', delete=False, suffix='.tmp', prefix='map') as handle:
             handle.write('\n'.join(map(str, step.status.to_process)))
@@ -456,9 +424,6 @@ class Process:
             fname = handle.name
         return fname
 
-    def reset_temp(self, to_process:List[str] = []) -> None:
-        self._clear_temp(full=True, to_process=to_process)
-
     def _extract_jobid(self, stdout) -> str:
         expr = r'\d+\.\d+@.*\.fnal\.gov'
         return re.search(expr, stdout).group(0)
@@ -469,28 +434,6 @@ class Process:
             if s not in available_steps:
                 logging.critical(f"Step {s} does not exist")
                 sys.exit()
-
-    def rebuild_db(self):
-        new_rows = []
-        for local_path in p.path:
-            for step in local_path:
-                tmp_files = [f"{step.odir}/{i}.temp" for i in step.status.temp]
-                
-                for i, tmp in zip(step.status.temp, tmp_files):
-                    with open(tmp, 'r') as tmp:
-                        jid = tmp.readline()
-                    db_row = {
-                        'jobid': jid,
-                        'status': 'I',
-                        'step': step.name,
-                        'step_id': i
-                    }
-                    logger.info(jid)
-                    new_rows.append(db_row)
-        self.db = pd.DataFrame(new_rows)
-        logger.info(self.db)
-        save_database(self.conn, self.db)
-        logger.info(f"Rebuild database. Now containing {len(self.db)} entries")
 
     def close_db(self):
         self.conn.close()
@@ -512,16 +455,11 @@ if __name__ == '__main__':
     if args.steps: #Check that only valid steps are given
         p.check_steps_exist(args.steps)
 
-    # p.reset_temp()
     p.display(skip_ok=args.skip_ok)
     p.print_process()
     p.print_progress()
 
     if args.action in ['send', 'dry']:
         p.submit(to_process=args.steps)
-    elif args.action == 'clear':
-        p.reset_temp(to_process=args.steps)
-    elif args.action == 'rebuild_db':
-        p.rebuild_db()
     
     p.close_db()

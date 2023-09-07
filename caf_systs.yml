@@ -1,0 +1,71 @@
+---
+path:
+  -
+    - name:         CAFMaker_systs
+      odir:         /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5_random/caf_pfpfix/
+      fcl:          ./fcl/atm-caf.fcl
+      local_source: /dune/app/users/pgranger/CAFMaker_new.tar.gz
+      inputs:
+        - ./fcl/mach3_systs.fcl
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      outputs:
+        - caf.root
+
+    - name:         Bee
+      odir:         /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5_random/bee/
+      fcl:          ./fcl/bee.fcl
+      local_source: /dune/app/users/pgranger/wirecell.tar.gz
+      job_config:
+        expected-lifetime: 1h
+        timeout: 1h
+      outputs: 
+        - bee/bee_upload.tar.gz
+
+    - name:         Export_rings
+      subdir:       rings
+      fcl:          ./fcl/atm-export-rings.fcl
+      local_source: /dune/app/users/pgranger/pandora_dl.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      inputs:
+        - ./fcl/PandoraSettings_Neutrino_Export.xml
+        - ./fcl/PandoraSettings_Master_Export.xml
+      outputs:
+        - rings_1.dat
+        - rings_2.dat
+
+    - name:         Training_extract
+      subdir:       training
+      fcl:          ./fcl/atm-training-extract.fcl
+      local_source: /dune/app/users/pgranger/pandora_dl.tar.gz
+      job_config:
+        expected-lifetime: 2h
+        timeout: 2h
+      inputs:
+        - ./fcl/PandoraSettings_Neutrino_Training.xml
+        - ./fcl/PandoraSettings_Master_Training.xml
+      outputs:
+        - training1_CaloHitListU.csv
+        - training1_CaloHitListV.csv
+        - training1_CaloHitListW.csv
+        - training2_CaloHitListU.csv
+        - training2_CaloHitListV.csv
+        - training2_CaloHitListW.csv
+
+global:
+  nfiles: 15000
+  nevents: 20
+  dune_version: v09_75_03d00
+  dune_qual: e20:debug
+  idir:         /pnfs/dune/persistent/users/pgranger/atm_50k_hd_AV_2.5_random/reco/
+  ifile:        atm_reco
+  odir: /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5_random/
+  job_config:
+    group: dune
+    expected-lifetime: 6h
+    memory: 4000
+    timeout: 6h
+    OS: SL7
