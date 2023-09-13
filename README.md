@@ -100,8 +100,11 @@ The path is composed of a list of steps that are automatically chained together.
 - **dune_qual** : specifies the dune qualifier to use together with the `dune_version`
 - **outputs** : a list of outputs to be copied back at the end of the job execution. This should be used to retrieve files produced by LArSoft that are not the official LArSoft output such as `flatcaf.root` for example.
 - **inputs** : a list of inputs to be copied in the directory where the LArSoft job is executed. Is typically used for `xml` pandora config files that configure the reco job.
-
 - **job_config** : a dictionnary of keys to pass to the job submission. The list of relevant fields can be found in `jobsub_submit` documentation. 
+- **is_larsoft** : indicates that the jobs sent will be Larsoft jobs and toggles some checks on the presence of some LarSoft-specific parameters. Should be set to `False` if you are not sending a LArSoft job. Defaults to `True`.
+- **script** : indicates which script to use to run the job on the remote node. The default one is to run any LArSoft job and should fit most of your needs.
+- **env** : dictionnary of env variables to be passed to the script when it is running. Should mainly be used when using non-LArSoft jobs to specify the relevant parameters to the job.
+- **repeat** : Shortcut to repeat the same step multiple times with each one taking as input the output of the previous iteration. Was mainly thought to be used for MaCh3 chains generation. Defaults to 1, meaning a single iteration of each step.
 
 In order to avoid repetitions of very similar configuration for all the steps, default parameters can be set under a `global` key. These parameters will be used by all the steps except if explicitly overwritten under the configuration of specific steps. Some other configuration parameters are only available through this `global` key:
 
