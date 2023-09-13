@@ -9,6 +9,30 @@ This repo contains the scripts that I use for atmospherics neutrino sample gener
 - `scripts`: Contains the scripts to be executed by the jobs at the various steps. Now only contains one master bash script that is automatically configures and can be used to run all the different stages of the simulation.
 - `json`: **Deprecated (left for the record)** ~~Contains the json configuration files used to launch a set of jobs with a specific configuration. To be used with `utils/json_submit`.~~
 
+## Setup instructions one dunegpvms
+
+Following these instructions should allow for a clean python env that ensures the good behaviour of the scripts of this repo. You might be able to install the requirements without this but we were not able to reproduce it in a consistent manner...
+
+### To create an environment
+
+To be executed at the root of this repo
+
+```bash
+setup python v3_9_13
+python3 -m venv my_venv
+source my_venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+```
+
+### To use this environment
+
+Commands to be run each time you start a new terminal and want to use these scripts to load the right python environment. I would advise you to use tmux (or screen if you are very old) to keep a session open with this specific env from which you can start new jobs at anytime.
+
+```bash
+setup python v3_9_13
+source my_venv/bin/activate
+```
 
 ## Production submission script
 The script `utils/chain-submit.py` allows to send jobs for a whole simulation path can be defined in a yaml file. This python code is the main one to be executed to be able to make a sample production. It should be called using `python3 utils/chain-submit.py OPTIONS`. It is used to run the same chain of simulation scripts on multiple files containing a given number of events by sending jobs to the grid.

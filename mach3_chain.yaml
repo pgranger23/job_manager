@@ -1,0 +1,21 @@
+---
+path:
+  - name:         Chain
+    odir:         /pnfs/dune/scratch/users/pgranger/mach3_chains/
+    local_source: /dune/app/users/pgranger/MaCh3_ana/MaCh3_DUNE.tar.gz
+    script:       ./scripts/mach3_job.sh
+    ofile: mach3_chain
+    repeat: 8
+    env:
+      YAML: "configs/AtmChain.yaml"
+      BINARY: "./build/src/DUNE_atm_chain"
+
+global:
+  nfiles: 1
+  is_larsoft: False
+  job_config:
+    group: dune
+    expected-lifetime: 6h
+    memory: 4000
+    timeout: 6h
+    OS: SL7

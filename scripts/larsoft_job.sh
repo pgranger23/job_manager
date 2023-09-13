@@ -1,4 +1,11 @@
 #!/bin/bash
+#######################################################
+# Used env variables:                                 #
+# DUNEVERSION ; DUNEQUALIFIER ; SOURCE_FOLDER ;       #
+# MAP_FILE ; FCL ; NEVENTS ; IDIR ; IBASENAME ;       #
+# OBASENAME ; ODIR ; ADDITIONAL_OUTPUTS               #
+#######################################################
+
 set -x
 
 source ${CONDOR_DIR_INPUT}/job_setup*.sh #Sourcing all the env variables that configure the job

@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/env python3
 
 import argparse
 from glob import glob
@@ -8,21 +8,19 @@ import sys
 from dataclasses import dataclass, field
 import yaml
 from typing import Dict, Set, List
-import json
-from json_submit import get_sub_cmd, check_exe
+from json_submit import get_sub_cmd
 import subprocess
 from tempfile import NamedTemporaryFile
 import numpy as np
 import logging
-from copy import deepcopy, copy
+from copy import deepcopy
 from get_jobs import create_connection, create_database, read_database, save_database, get_finished
 import pandas as pd
-import pprint
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-TEMPLATE_SCRIPT = "../scripts/job_script.sh"
+TEMPLATE_SCRIPT = os.path.realpath(os.path.join(os.path.dirname(__file__), "../scripts/larsoft_job.sh"))
 
 class bcolors:
     HEADER = '\033[95m'
@@ -59,9 +57,13 @@ class Step:
     idir: str = ""
     ifile: str = ""
     ofile: str = ""
+    repeat: int = 1
     nevents: int = 50
+    script: str = TEMPLATE_SCRIPT
+    is_larsoft: bool = True
     outputs: List[int] = field(default_factory=list)
     inputs: List[int] = field(default_factory=list)
+    env: Dict[str, str] = field(default_factory=dict)
     job_config: Dict = field(default_factory=dict)
     status: StepStatus = field(default_factory=StepStatus)
 
@@ -78,22 +80,45 @@ class Step:
                 setattr(self, key, val)
 
     def validate(self) -> None:
-        mandatory = ['name', 'fcl', 'odir', 'dune_version', 'dune_qual', 'job_config']
-
+        mandatory = ['name', 'odir', 'job_config', 'script']
+        mandatory_larsoft = ['fcl', 'dune_version', 'dune_qual']
         for key in mandatory:
             if getattr(self, key) == "":
-                logger.critical(f"Key {key} should exist for each step!")
+                logger.critical(f"Key {key} should exist for each step of a LArSoft job!")
+                logger.info("If your job is not running LArSoft set `is_larsoft` to `False` in the config")
                 sys.exit()
+        if self.is_larsoft:
+            for key in mandatory_larsoft:
+                if getattr(self, key) == "":
+                    logger.critical(f"Key {key} should exist for each step!")
+                    sys.exit()
         if self.subdir != "":
             self.odir = os.path.join(self.odir, self.subdir)
+        if not os.path.exists(self.script):
+            logger.critical(f"Script file {self.script} does not exist!")
+            sys.exit()
+        if self.repeat < 1:
+            logger.critical(f"Repeat should be at least 1!")
+            sys.exit()
 
     def extend_relative(self, yaml_path:str) -> None:
-        fields = ['fcl']
+        fields = ['fcl', 'script']
         for key in fields:
             val = getattr(self, key)
-            if val[0] == '.':
+            if val and val[0] == '.':
                 abs_path = os.path.realpath(os.path.join(yaml_path, val))
                 setattr(self, key, abs_path)
+    
+    def doppelgangers(self) -> List:
+        dgs = []
+        for i in range(self.repeat):
+            cpy = deepcopy(self)
+            cpy.name = f"{cpy.name}_{i}"
+            cpy.odir = f"{cpy.odir.rstrip('/')}_{i}"
+            cpy.ofile = f"{cpy.ofile}_{i}"
+
+            dgs.append(cpy)
+        return dgs
 
 class Process:
     def __init__(self, path_file:str, dry:bool=False, new:bool=False):
@@ -176,9 +201,6 @@ class Process:
                 logger.critical(f"Missing field '{field}' in 'global' section of config!")
                 sys.exit()
 
-        # if not os.path.exists(glob_conf['odir']):
-        #     logger.critical(f"Odir path {glob_conf['odir']} does not exist!")
-        #     sys.exit()
         script_file, ext = os.path.splitext(fname)
         self.db_file = script_file + '.sqlite'
         
@@ -209,7 +231,14 @@ class Process:
                 step.fill(step_elt)
                 step.validate()
                 step.extend_relative(os.path.dirname(fname))
-                local_path.append(step)
+
+                if step.repeat > 1:
+                    if len(slist) != 1:
+                        logging.critical("Repeat is not allowed for concurrent steps as I didn't check the implications of doing so!")
+                        sys.exit()
+                    path += [[s] for s in step.doppelgangers()]
+                else:
+                    local_path.append(step)
             path.append(local_path)
         self.path = path
 
@@ -254,10 +283,11 @@ class Process:
 
         input_files = [map_file_url, setup_file_url]
 
-        if not os.path.exists(step.fcl):
-            logger.warning(f"{step.fcl} does not exist locally, it is expected to be in FHICLPATH then!")
-        else:
-            input_files.append(f'dropbox://{step.fcl}')
+        if step.is_larsoft:
+            if not os.path.exists(step.fcl):
+                logger.warning(f"{step.fcl} does not exist locally, it is expected to be in FHICLPATH then!")
+            else:
+                input_files.append(f'dropbox://{step.fcl}')
         
 
         config = {}
@@ -292,7 +322,7 @@ class Process:
         config["-f"] = input_files
         config["-N"] = str(len(step.status.to_process))
 
-        bash_script = f"file://{os.path.realpath(os.path.join(os.path.dirname(__file__), TEMPLATE_SCRIPT))}"
+        bash_script = f"file://{step.script}"
         config[bash_script] = []
 
         jobid = self._submit_job(config)
@@ -321,10 +351,14 @@ class Process:
         jobid = "999999.0@test.fnal.gov"
         if not self.dry:
             logger.info("Calling jobsub with this command")
-            ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-            print(ret.stdout)
-            ret.check_returncode()
-            jobid = self._extract_jobid(ret.stdout)
+            output_rec = ""
+            with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True) as p:
+                for line in p.stdout:
+                    output_rec += line
+                    print(line, end='')
+            if p.returncode != 0:
+                raise subprocess.CalledProcessError(p.returncode, p.args)
+            jobid = self._extract_jobid(output_rec)
         return jobid
 
 
@@ -412,6 +446,8 @@ class Process:
 
         if step.local_source != "":
             setup_map["SOURCE_FOLDER"] = os.path.basename(step.local_source).replace('.tar.gz', '')
+
+        setup_map.update(step.env)
 
         with NamedTemporaryFile(mode='w', delete=False, suffix='.sh', prefix='job_setup') as handle:
             to_write = []
