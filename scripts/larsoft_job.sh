@@ -27,9 +27,12 @@ if [ ! -z "$MAP_FILE" ]; then
 
 	cp ${CONDOR_DIR_INPUT}/$MAP_FILE .
 	LINE=$((PROCESS+1))
-	ID=$(sed "${LINE}q;d" $MAP_FILE)
+	EXTRACTED=$(sed "${LINE}q;d" $MAP_FILE)
+	ID=$(echo "$EXTRACTED" | cut -f1 -d' ')
+	DATASET_FILE=$(echo "${EXTRACTED}" | cut -f2 -d' ' -s)
 
 	echo "Processing job with id $ID"
+	echo "Eventually fot DATASET_FILE: ${DATASET_FILE}"
 
 else
 	ID=$PROCESS
@@ -41,7 +44,7 @@ cp ${CONDOR_DIR_INPUT}/*.root . 2>/dev/null || : #Copying eventual root files
 export FW_SEARCH_PATH=$PWD:$FW_SEARCH_PATH #Necessary for the local path to be searched first for xml files.
 export FHICL_FILE_PATH=$PWD:$FHICL_FILE_PATH #Make sure that the local path to be searched first for fcl files.
 
-CMD="lar -c $FCL -n $NEVENTS -e 20000063:$ID:1"
+CMD="lar -c $FCL -n $NEVENTS -e 1:$ID:1"
 
 if [ ! -z "$IDIR" ]; then
 	echo "Getting input file from $IDIR"
@@ -55,6 +58,22 @@ if [ ! -z "$IDIR" ]; then
 	mkdir -p $LOCAL_IDIR
 
 	LOCAL_IFILE=${LOCAL_IDIR}/${IFILE_BASENAME}
+	ifdh cp $IFILE $LOCAL_IFILE
+
+	CMD="$CMD -s $LOCAL_IFILE"
+fi
+
+if [ ! -z "$DATASET_FILE" ]; then
+	echo "Input file is dataset file $DATASET_FILE"
+
+	IFILE=$(samweb get-file-access-url ${DATASET_FILE})
+
+	ifdh ls $IFILE 0 || exit 0 #Check that input file exists
+
+	LOCAL_IDIR=${WORKDIR}/input/
+	mkdir -p $LOCAL_IDIR
+
+	LOCAL_IFILE=${LOCAL_IDIR}/${DATASET_FILE}
 	ifdh cp $IFILE $LOCAL_IFILE
 
 	CMD="$CMD -s $LOCAL_IFILE"

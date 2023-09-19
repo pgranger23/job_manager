@@ -21,6 +21,28 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] {%(pathname)s:%(li
 logger = logging.getLogger(__name__)
 
 TEMPLATE_SCRIPT = os.path.realpath(os.path.join(os.path.dirname(__file__), "../scripts/larsoft_job.sh"))
+SAMWEB_EXE = "/cvmfs/fermilab.opensciencegrid.org/products/common/prd/sam_web_client/v3_3/NULL/bin/samweb"
+
+def get_dataset(dataset:str) -> List[str]:
+    logger.info(f"Using dataset {dataset}")
+    fname = f"./{dataset}.list"
+    if os.path.exists(fname):
+        logger.info(f"Reusing already computed list {fname}")
+        with open(fname) as f:
+            filelist = f.read().splitlines()
+    else:
+        cmd = f'{SAMWEB_EXE} list-files "defname:{dataset}"'
+        ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        ret.check_returncode()
+        
+        filelist = ret.stdout.splitlines()
+        logger.info(f"Saving filelist to {fname}")
+        with open(fname, 'w') as f:
+            f.write('\n'.join(filelist))
+
+    logger.info(f"Got a dataset size of {len(filelist)}")
+    return filelist
+    
 
 class bcolors:
     HEADER = '\033[95m'
@@ -57,8 +79,10 @@ class Step:
     idir: str = ""
     ifile: str = ""
     ofile: str = ""
+    dataset: str = ""
     repeat: int = 1
     nevents: int = 50
+    nfiles: int = 0
     script: str = TEMPLATE_SCRIPT
     is_larsoft: bool = True
     outputs: List[int] = field(default_factory=list)
@@ -100,6 +124,14 @@ class Step:
         if self.repeat < 1:
             logger.critical(f"Repeat should be at least 1!")
             sys.exit()
+        if self.dataset != "":
+            if self.ifile != "":
+                logger.critical("Both dataset and ifile cannot be set at the dame time!")
+                sys.exit()
+            self.dataset = get_dataset(self.dataset)
+            if len(self.dataset) < self.nfiles:
+                logger.critical(f"The dataset is smaller ({len(self.dataset)}) than the number of required jobs ({self.nfiles})")
+                sys.exit()
 
     def extend_relative(self, yaml_path:str) -> None:
         fields = ['fcl', 'script']
@@ -205,7 +237,6 @@ class Process:
         self.db_file = script_file + '.sqlite'
         
         self.N = int(glob_conf['nfiles'])
-        glob_conf.pop('nfiles')
 
         template_step = Step()
         template_step.fill(glob_conf)
@@ -426,7 +457,11 @@ class Process:
 
     def _create_map(self, step:Step) -> str:
         with NamedTemporaryFile(mode='w', delete=False, suffix='.tmp', prefix='map') as handle:
-            handle.write('\n'.join(map(str, step.status.to_process)))
+            if step.dataset != "":
+                lines = [f"{i} {step.dataset[i]}" for i in step.status.to_process]
+            else:
+                lines = map(str, step.status.to_process)
+            handle.write('\n'.join(lines))
             fname = handle.name
         return fname
 
