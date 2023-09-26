@@ -106,6 +106,8 @@ The path is composed of a list of steps that are automatically chained together.
 - **env** : dictionnary of env variables to be passed to the script when it is running. Should mainly be used when using non-LArSoft jobs to specify the relevant parameters to the job.
 - **repeat** : Shortcut to repeat the same step multiple times with each one taking as input the output of the previous iteration. Was mainly thought to be used for MaCh3 chains generation. Defaults to 1, meaning a single iteration of each step.
 - **dataset** : Dataset definition to use as input of the job. Replaces `ifile`, both cannot be set at the same time.
+- **debug_output** : If `True` set `set -x`, otherwise sets `set +x` in the job bash file. Defaults to `True`.
+
 
 In order to avoid repetitions of very similar configuration for all the steps, default parameters can be set under a `global` key. These parameters will be used by all the steps except if explicitly overwritten under the configuration of specific steps. Some other configuration parameters are only available through this `global` key:
 

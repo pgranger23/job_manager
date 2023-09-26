@@ -83,6 +83,7 @@ class Step:
     repeat: int = 1
     nevents: int = 50
     nfiles: int = 0
+    debug_output: bool = True
     script: str = TEMPLATE_SCRIPT
     is_larsoft: bool = True
     outputs: List[int] = field(default_factory=list)
@@ -492,6 +493,10 @@ class Process:
                 else:
                     to_write.append(f"{key}={val}")
             handle.write('\n'.join(to_write))
+            if step.debug_output:
+                handle.write('\n' + 'set -x')
+            else:
+                handle.write('\n' + 'set +x')
             fname = handle.name
         return fname
 
