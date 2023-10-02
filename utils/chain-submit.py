@@ -449,7 +449,7 @@ class Process:
     def print_process(self) -> None:
         for local_path in self.path:
             for step in local_path:
-                print(f"{step.name} => {step.status.to_process}")
+                print(f"{step.name} => {len(step.status.to_process)} files available to process")
 
     def print_progress(self) -> None:
         for local_path in self.path:
