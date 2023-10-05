@@ -60,6 +60,13 @@ else
     sed -i 's#StartFromPos.*#StartFromPos: false#g' $LOCAL_YAML
 fi
 
+#Replace the relevant fields with the process id in the yaml
+if [ ! -z "$REPLACE_ID" ]; then
+	for FIELD in ${REPLACE_ID[@]}; do
+		sed -i 's#'$FIELD'.*#'$FIELD': '$ID'#g' $LOCAL_YAML
+	done
+fi
+
 #Configure the output file location
 if [ ! -z "$OBASENAME" ]; then
 	LOCAL_ODIR=${WORKDIR}/output/

@@ -271,7 +271,8 @@ class Process:
                     path += [[s] for s in step.doppelgangers()]
                 else:
                     local_path.append(step)
-            path.append(local_path)
+            if local_path:
+                path.append(local_path)
         self.path = path
 
         self._chain_io()

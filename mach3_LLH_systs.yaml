@@ -1,0 +1,23 @@
+---
+path:
+  - name:         LLH_systs
+    odir:         /pnfs/dune/scratch/users/pgranger/mach3_LLH_systs/
+    local_source: /dune/app/users/pgranger/MaCh3_ana/MaCh3_DUNE.tar.gz
+    script:       ./scripts/mach3_job.sh
+    ofile:        LLH_systs
+    env:
+      YAML: "configs/LLH.yaml"
+      BINARY: "./build/src/DUNE_LLHscan_systs"
+      REPLACE_ID:
+        - parId1
+
+global:
+  nfiles: 54
+  is_larsoft: False
+  job_config:
+    group: dune
+    expected-lifetime: 2h
+    memory: 12000
+    timeout: 2h
+    OS: SL7
+    blacklist: Liverpool,Manchester,SGrid,SGridOxford
