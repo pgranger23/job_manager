@@ -46,7 +46,7 @@ Here is how this script works:
 5. The jobid of each job is saved inside a local database to detect jobs that ended without providing an output file to be able to restart them (managed at step 3.).
 
 The script does not provide an internal loop at the moment. The best way to use it is thus to execute a loop such as (**in a tmux session OFC**):
-`while True; do python3 utils/chain-submit.py; sleep 15m; done`
+`while true; do python3 utils/chain-submit.py your_config.yaml; sleep 15m; done`
 
 ### `chain-submit.py` options
 
@@ -106,7 +106,7 @@ The path is composed of a list of steps that are automatically chained together.
 - **env** : dictionnary of env variables to be passed to the script when it is running. Should mainly be used when using non-LArSoft jobs to specify the relevant parameters to the job.
 - **repeat** : Shortcut to repeat the same step multiple times with each one taking as input the output of the previous iteration. Was mainly thought to be used for MaCh3 chains generation. Defaults to 1, meaning a single iteration of each step.
 - **dataset** : Dataset definition to use as input of the job. Replaces `ifile`, both cannot be set at the same time.
-- **debug_output** : If `True` set `set -x`, otherwise sets `set +x` in the job bash file. Defaults to `True`.
+- **debug_output** : If `True` set `set -x`, otherwise sets `set +x` in the job bash file. Defaults to `False`.
 
 
 In order to avoid repetitions of very similar configuration for all the steps, default parameters can be set under a `global` key. These parameters will be used by all the steps except if explicitly overwritten under the configuration of specific steps. Some other configuration parameters are only available through this `global` key:
@@ -174,7 +174,7 @@ Make sure to create the file `my_awersome_atm_prod` on `scratch` area.
 
 To check if everything is fine, run:  
 ```
-python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.yaml dry`  
+python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.yaml dry
 ```
 **NOTE:** This command must be executed inside the `atmo_gen` directory. 
 
@@ -206,7 +206,7 @@ Now, let's say that the user `morgoth` did some changes on the `Anatree` and `CA
 
 The first step is to create a archive file. After setting up your version of larsoft (in this example, it is located at `/dune/app/users/morgoth/better_ana_and_caf/larsoft/`), simply run: 
 ```
-python3 utils/gen_tar`
+python3 utils/gen_tar
 ```
 
 In this example, the `sim_hd_AV_example.yaml` can be used. The `local_source` file is already updated.  
