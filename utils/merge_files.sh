@@ -10,7 +10,7 @@ Help(){
 }
 
 if [ ! -z "$1" ]; then
-    if [ "$1" == "-h" ] || [ "$1" == "--h" ]; then
+    if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
         Help
         return 0
     fi
@@ -19,7 +19,7 @@ fi
 if [ ! -z "$2" ]; then
     filename=$2
 fi
-find $cpwd/$filetype | sed 's#/pnfs/dune/#root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/#' > fileshadd.list
+find $cpwd -name "$filetype" | sed 's#/pnfs/dune/#root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/#' > fileshadd.list
 semipath=$( pwd | sed 's#/pnfs/dune/#root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/#' )
 echo "Done creating file"
 echo "Executing: "
