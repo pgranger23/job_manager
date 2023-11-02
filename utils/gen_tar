@@ -18,5 +18,12 @@ sed -i "s#${PARENT_DIR}#"'${INPUT_TAR_DIR_LOCAL}#g' ${MRB_INSTALL}/setup-grid
 
 echo "Creating ${MRB_TOP}.tar.gz from ${MRB_INSTALL} ..."
 
-tar --exclude '.git' -C $PARENT_DIR -czf ${MRB_TOP}.tar.gz ${MAIN_DIR}/${INSTALL_DIR}
+# tar --exclude '.git' -C $PARENT_DIR -czf ${MRB_TOP}.tar.gz ${MAIN_DIR}/${INSTALL_DIR}
+
+FROMSIZE=`du -sk --apparent-size ${PARENT_DIR}/${MAIN_DIR}/${INSTALL_DIR} | cut -f 1`;
+CHECKPOINT=`echo ${FROMSIZE}/50 | bc`;
+echo "Estimated: [==================================================]";
+echo -n "Progess:   [";
+tar --exclude '.git' -C $PARENT_DIR -c --record-size=1K --checkpoint="${CHECKPOINT}" --checkpoint-action="ttyout=>" -f - "${MAIN_DIR}/${INSTALL_DIR}" | bzip2 > "${MRB_TOP}.tar.gz";
+echo "]"
 
