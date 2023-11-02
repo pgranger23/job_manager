@@ -162,15 +162,25 @@ NB: Not working at the moment as LArSoft v09_74_01 has been released but not dun
 In this example, I will the user `iluvatar` wants to make his own production, but without adding any change.  
 After cloning the directory, make a copy of `sim_hd_AV.yaml` to any directory (ex: `/dune/app/users/iluvatar/new_atm_prod/`)
 
-In the `sim_hd_AV.yaml` configuration, the `.tar.gz` archive file used are from `pgranger` (that is fine). However the `global` `odir` need to be changed.  
+In the `sim_hd_AV.yaml` configuration, the `.tar.gz` archive file used are from `pgranger` (that is fine). However the `global` `odir` needs to be changed.  
 So replace:  
 `odir: /pnfs/dune/scratch/users/pgranger/atm_50k_hd_AV_2.5_random/`  
 by:  
 `odir: /pnfs/dune/scratch/users/iluvatar/my_awesome_atm_prod/`  
 
-Make sure to create the file `my_awersome_atm_prod` on `scratch` area.
+Make sure to create the folder `my_awersome_atm_prod` on `scratch` area.
 
-(For testing, also reduce `nfiles` to 2)
+**For testing, also lower `nfiles` to 2**
+
+To create all the relevant subdirectories for your project automatically, run the following command:
+
+```bash
+python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.yaml new
+```
+
+The `new` option will make sure to create `genie`, `g4`, `detsim`, etc. directories (set as `subdir` in the yaml file).
+
+:warning: *If running this command takes more than ~15s, you probably are having a credential issue. This is typically the case if you never sent jobs before. In order to make sure, just `Ctrl+C` out and run `jobsub_q $USER`. If you need some additional credentials, it will print you the relevant info to log in (typically a link to follow where you should use your FNAL creds).*
 
 To check if everything is fine, run:  
 ```
@@ -182,8 +192,6 @@ Now to send the job, the following command should be executed:
 ```
 python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.yaml new
 ```
-
-The `new` option will make sure to create `genie`, `g4`, `detsim`, etc. directories (set as `subdir` in the yaml file). If you use `send`, make sure to create this folders beforehand.
 
 Once the script was executed and the main job created, you can use the same command with `dry` to check the status of each job (the subfiles).  
 
@@ -198,7 +206,7 @@ Once `iluvatar` is sure that all scripts work fine and the sounds nice, to produ
 This needs to be done that way because there is a limit of 10,000 jobs per user. After sending the first 5,000 events, if the user change `nfiles` to 10,000 it will skip the already existing files (and so produce 5000 more with correct index).
 
 Easy-peasy
-(remember that scratch files will be erased after a while)
+(remember that scratch files will be erased after a while, typically ~30 days)
 
 ## Sample production with modifications
 
@@ -206,7 +214,7 @@ Now, let's say that the user `morgoth` did some changes on the `Anatree` and `CA
 
 The first step is to create a archive file. After setting up your version of larsoft (in this example, it is located at `/dune/app/users/morgoth/better_ana_and_caf/larsoft/`), simply run: 
 ```
-python3 utils/gen_tar
+./utils/gen_tar
 ```
 
 In this example, the `sim_hd_AV_example.yaml` can be used. The `local_source` file is already updated.  
