@@ -24,6 +24,6 @@ FROMSIZE=`du -sk --apparent-size ${PARENT_DIR}/${MAIN_DIR}/${INSTALL_DIR} | cut 
 CHECKPOINT=`echo ${FROMSIZE}/50 | bc`;
 echo "Estimated: [==================================================]";
 echo -n "Progess:   [";
-tar --exclude '.git' -C $PARENT_DIR -c --record-size=1K --checkpoint="${CHECKPOINT}" --checkpoint-action="ttyout=>" -f - "${MAIN_DIR}/${INSTALL_DIR}" | bzip2 > "${MRB_TOP}.tar.gz";
+tar --exclude '.git' -C $PARENT_DIR -c --record-size=1K --checkpoint="${CHECKPOINT}" --checkpoint-action="ttyout=>" -f - "${MAIN_DIR}/${INSTALL_DIR}" | gzip > "${MRB_TOP}.tar.gz";
 echo "]"
 
