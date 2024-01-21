@@ -17,7 +17,7 @@ source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 setup dunesw $DUNEVERSION -q $DUNEQUALIFIER
 
 if [ ! -z "$SOURCE_FOLDER" ]; then
-	echo "Using custom sources from ${SOURCE_FOLDER}"
+	echo "Using custom sources from $SOURCE_FOLDER"
 	source ${INPUT_TAR_DIR_LOCAL}/${SOURCE_FOLDER}/localProducts*/setup-grid
 	mrbslp
 fi
@@ -32,7 +32,7 @@ if [ ! -z "$MAP_FILE" ]; then
 	DATASET_FILE=$(echo "${EXTRACTED}" | cut -f2 -d' ' -s)
 
 	echo "Processing job with id $ID"
-	echo "Eventually fot DATASET_FILE: ${DATASET_FILE}"
+	echo "Eventually fot DATASET_FILE: $DATASET_FILE"
 
 else
 	ID=$PROCESS

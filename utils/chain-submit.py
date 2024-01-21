@@ -83,7 +83,7 @@ class Step:
     repeat: int = 1
     nevents: int = 50
     nfiles: int = 0
-    debug_output: bool = True
+    debug_output: bool = False
     script: str = TEMPLATE_SCRIPT
     is_larsoft: bool = True
     outputs: List[int] = field(default_factory=list)
