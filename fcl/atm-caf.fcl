@@ -6,8 +6,8 @@
 #include "RegCNNMapper.fcl"
 #include "RegCNNEvaluator.fcl"
 #include "energyreco.fcl"
-#include "mach3_systs.fcl"
-
+##include "mach3_systs.fcl"
+#include "mach3_systs_updated.fcl"
 process_name: Cafana2
 
 services:
@@ -101,7 +101,7 @@ physics.producers.mvaselectnue.WeightFile:   "MVASelect/v2.2/TMVAClassification_
 physics.producers.mvaselectnumu.WeightFile:  "MVASelect/v2.2/TMVAClassification_BDTG.numu.weights.xml"
 
 
-physics.analyzers.cafmaker.CreateFlatCAF:           false
+physics.analyzers.cafmaker.CreateFlatCAF:           true
 physics.analyzers.cafmaker.MakeWeightTree:          false
 physics.analyzers.cafmaker.Reweight:                false
 physics.analyzers.cafmaker.MakeAnaTree:             false
