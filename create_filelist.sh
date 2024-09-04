@@ -35,6 +35,7 @@ if [ "$REWRITE" = true ]; then
 
   if [ -e $dataset ]; then
     rm $dataset
+    touch dataset
   fi
 fi
 
@@ -48,7 +49,7 @@ fi
 echo "Parent file created..."
 sort -o $dataset_parent -n -t '_' -k 7 -k 8 $dataset_parent
 
-# for parent in $(head -n 5 $dataset_parent); do
+RUCIOOUT=$( mktemp )
 for parent in $(cat $dataset_parent| head -n $NEVENTS); do
   filename=$( cut -d ":" -f 2 <<< $parent )
   if [ $( grep -c $filename $dataset ) -eq 1 ]; then
@@ -56,13 +57,16 @@ for parent in $(cat $dataset_parent| head -n $NEVENTS); do
     continue
   fi
   echo "Getting parent $parent"
-  replicas=$( rucio list-file-replicas --pfns $parent )
-  replica=$( echo $replicas | grep fnal | grep persistent )
+  rucio list-file-replicas --pfns $parent > $RUCIOOUT
+  replica=$( grep fnal $RUCIOOUT | grep persistent )
   if [[ -z $replica ]]; then
-    replica=$( echo $replicas | grep golias )
+    replica=$( grep golias $RUCIOOUT)
   fi
   if [[ -z $replica ]]; then
-    replica=$( echo $replicas | grep xroot )
+    replica=$( grep xroot $RUCIOOUT)
+  fi
+  if [[ -z $replica ]]; then
+    continue
   fi
   echo $replica >> $dataset
 done
