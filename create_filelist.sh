@@ -39,6 +39,9 @@ if [ "$REWRITE" = true ]; then
   fi
 fi
 
+tmp=$( mktemp )
+dataset_parent_nevents=$( mktemp )
+
 Dataset="fardet-hd:fardet-hd__full-reconstructed__v09_85_00d00__reco2_atmos_dune10kt_1x2x6_geov5__prodgenie_atmnu_max_weighted_randompolicy_dune10kt_1x2x6__out1__v1_official"
 echo "Getting dataset $Dataset limit $NEVENTS"
 if [ $( wc -l $dataset_parent | cut -d " " -f 1 )  -ge $NEVENTS ]; then
@@ -47,15 +50,30 @@ else
   metacat query "files from $Dataset ordered limit ${NEVENTS}" >> $dataset_parent
 fi
 echo "Parent file created..."
-sort -o $dataset_parent -n -t '_' -k 7 -k 8 $dataset_parent
+
+sort -o $dataset_parent -n -t '_' -k 7 -k 8 $dataset_parent 
+uniq $dataset_parent > $tmp
+cp $tmp $dataset_parent
+
+head -n $NEVENTS $dataset_parent > $dataset_parent_nevents
+
+echo "Getting missing files.."
+sort -o $dataset -n -t '_' -k 7 -k 8 $dataset
+filesthere=$( mktemp )
+sed "s#^.*atmnu#atmnu#p" $dataset > $filesthere
+missingfiles=$( grep -vF -f $filesthere $dataset_parent_nevents )
 
 RUCIOOUT=$( mktemp )
-for parent in $(cat $dataset_parent| head -n $NEVENTS); do
-  filename=$( cut -d ":" -f 2 <<< $parent )
-  if [ $( grep -c $filename $dataset ) -eq 1 ]; then
-    echo "Already there.."
-    continue
-  fi
+ITER=0
+# echo $dataset_parent_nevents
+# echo $filesthere
+
+if [[ -z $missingfiles ]]; then
+  echo "All files are already in ${dataset}"
+else
+  echo "Running ..."
+fi
+for parent in ${missingfiles[@]}; do
   echo "Getting parent $parent"
   rucio list-file-replicas --pfns $parent > $RUCIOOUT
   replica=$( grep fnal $RUCIOOUT | grep persistent )
