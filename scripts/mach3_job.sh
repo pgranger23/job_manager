@@ -9,14 +9,16 @@ set -x
 
 source ${CONDOR_DIR_INPUT}/job_setup*.sh #Sourcing all the env variables that configure the job
 
-#Creating the workdir
-WORKDIR=${_CONDOR_SCRATCH_DIR}/work/
-mkdir -p $WORKDIR && cd $WORKDIR
-
 #Specifying MaCh3 source directory that was automatically untared
 CODEDIR=${INPUT_TAR_DIR_LOCAL}/MaCh3_DUNE/
 #Setup local MaCh3 env
+cd $CODEDIR
 source $CODEDIR/setup_dune_env.sh
+source $CODEDIR/setup_grid.sh
+
+#Creating the workdir
+WORKDIR=${_CONDOR_SCRATCH_DIR}/work/
+mkdir -p $WORKDIR && cd $WORKDIR
 
 
 #Copies the YAML file into a writeable directory to modify it
@@ -73,7 +75,7 @@ if [ ! -z "$OBASENAME" ]; then
 	mkdir -p $LOCAL_ODIR
 	LOCAL_OFILE=$LOCAL_ODIR/${OBASENAME}_${ID}.root
 
-    sed -i -r 's#^(\s*)FileName.*#\1FileName: '$LOCAL_OFILE'#g' $LOCAL_YAML
+    sed -i -r 's#^(\s*)OutputFile.*#\1OutputFile: '$LOCAL_OFILE'#g' $LOCAL_YAML
 fi
 
 #Print YAML file to debug and check the config
@@ -82,8 +84,12 @@ cat $LOCAL_YAML
 echo "###################################################"
 
 
+echo "####################INPUT_FILES####################"
+ls -lht /cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/MaCh3/inputs/Atmospheric/v1/
+echo "##############################S####################"
 
 cd $CODEDIR
+export ROOT_INCLUDE_PATH=${CODEDIR}/build/ #Required to have StandardRecord.h found when loading CAFs
 
 #Necessary libray path additions
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CODEDIR}/build/lib/
@@ -92,6 +98,8 @@ export LD_LIBRARY_PATH
 
 echo $LD_LIBRARY_PATH
 ldd $BINARY
+
+env
 
 
 #Running MaCh3
