@@ -1,13 +1,13 @@
-[[_TOC_]]
+# Set of scripts to send series of jobs on Fermigrid (can be easily adapted to any cluster in theory)
 
-# Set of scripts to make an atm. nu generation
+This repo contains the scripts that I use for atmospherics neutrino sample generation. It contains both atmospheric specific FCL files but also generic utils that can be used for any LArSoft generation in theory.
+In addition, it can be used to send non-LArSoft jobs and is made to be quite flexible.
 
-This repo contains the scripts that I use for atmospherics neutrino sample generation. It contains both atmospheric specific FCL files but also generic utils that can be used for any LArSoft generation in theory. All was designed to be used on **FNAL machines**. Here is a short description of the various folders:
+All was designed to be used on **FNAL machines**. Here is a short description of the various folders:
 
 - `utils`: Contains some scripts used to ease the job submission
 - `fcl`: Contains the handwritten FCL files that are not generic
 - `scripts`: Contains the scripts to be executed by the jobs at the various steps. Now only contains one master bash script that is automatically configures and can be used to run all the different stages of the simulation.
-- `json`: **Deprecated (left for the record)** ~~Contains the json configuration files used to launch a set of jobs with a specific configuration. To be used with `utils/json_submit`.~~
 
 ## Setup instructions one dunegpvms
 
@@ -47,6 +47,8 @@ Here is how this script works:
 
 The script does not provide an internal loop at the moment. The best way to use it is thus to execute a loop such as (**in a tmux session OFC**):
 `while true; do python3 utils/chain-submit.py your_config.yaml; sleep 15m; done`
+
+:warning: *If running this command hangs for more than ~10s, you probably are having a credential issue. This is typically the case if you never sent jobs before. In order to make sure, just `Ctrl+C` out and run `jobsub_q -G dune $USER`. If you need some additional credentials, it will print you the relevant info to log in (typically a link to follow where you should use your FNAL creds).*
 
 ### `chain-submit.py` options
 
@@ -120,16 +122,6 @@ Typically a good practice would be to parallelize as much as possible by trying 
 
 **IMPORTANT NOTE**: Common sense commands to first test **ANY** new generation pipeline with a very reduced number of files (eg. 10) before running directly on a large number of files.
 
-### Quick note on anchors in yaml
-
-**Does not seem to work at the moment!!!** Maybe requires the yaml loader library.
-
-~~Yaml syntax is globally quite transparent. If you really don't like to repeat yourself, yaml includes a concept of anchors and alias where bits of configuration can be reused in several places in the same file. This is used by defining an anchor with `&` and using it with `*`. More info [here](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors)~~
-
-<!-- ### An example about restarting from already generated files
-
-Imagine that someone kindly generated a sample and you would like to reprocess the anatree step because you made some modifications of the code. Unfortunately, you don't have write access to the location where this sample was generated and would like to use the former reco output to generate your new anatree files and write your new anatree files to a repo of your own. -->
-
 
 ## Atmospheric generation steps
 
@@ -146,14 +138,6 @@ graph TD
 ```
 
 This generation process can be made by using `utils/chain-submit.sh`. The `sim_hd_AV.yaml` file defines the current simulation chain that is used for the atmospheric neutrinos production.
-
-<!-- ~~Each step has to be applied successively by using `utils/json_submit` on the associated json files found in `json`.
-Of course some parameters have to be changed if you want to run this by yourself. For example `GLOBAL_ODIR` can be easily changed in all the scripts files by using:~~
-```bash
-sed -i 's#^GLOBAL_ODIR.*#GLOBAL_ODIR="/pnfs/dune/scratch/users/MY_USERNAME/MY_SAMPLE_NAME/"#g' scripts/*.sh
-```
-
-NB: Not working at the moment as LArSoft v09_74_01 has been released but not dunesw v09_74_01 yet! -->
 
 # How to use it (examples)
 
@@ -180,8 +164,6 @@ python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.ya
 
 The `new` option will make sure to create `genie`, `g4`, `detsim`, etc. directories (set as `subdir` in the yaml file).
 
-:warning: *If running this command takes more than ~15s, you probably are having a credential issue. This is typically the case if you never sent jobs before. In order to make sure, just `Ctrl+C` out and run `jobsub_q $USER`. If you need some additional credentials, it will print you the relevant info to log in (typically a link to follow where you should use your FNAL creds).*
-
 To check if everything is fine, run:  
 ```
 python3 utils/chain-submit.py /dune/app/users/iluvatar/new_atm_prod/sim_hd_AV.yaml dry
@@ -200,8 +182,8 @@ By using `send` again, only the jobs that failed or that still does not exist wi
 Once `iluvatar` is sure that all scripts work fine and the sounds nice, to produce 10,000 events, he can do the following:
 
 1. Change `nfiles` to `5000`.
-1. Execute the command with `send`
-1. After everything (most of it) is finished, change `nfiles` to `10000` and run again
+2. Execute the command with `send`
+3. After everything (most of it) is finished, change `nfiles` to `10000` and run again
 
 This needs to be done that way because there is a limit of 10,000 jobs per user. After sending the first 5,000 events, if the user change `nfiles` to 10,000 it will skip the already existing files (and so produce 5000 more with correct index).
 
@@ -225,4 +207,16 @@ Global `odir` need also to be modified, in the example it was set to:
 
 Now `morgoth` can test and then run `utils/chain-submit.py` in the same way as `iluvatar` in the [previous example](#sample-generation-entire-production).
 
- 
+## Using it to send MaCh3 chains
+
+ A specific job setup file is provided to run series of linked MaCh3 chains in parallels, as well as other mach3 related jobs. This file is `scripts/mach3_job.sh`.
+ An example of chains job submission is provided with `mach3_chain.yaml`. This yaml config file makes use of the above mach3 job config file together with the `repeat` option in order to generate long MaCh3 chains as smaller restarted linked chains. It also uses the `env` field in order to pass relevant information to the job such as the MaCh3 yaml config file to use or the binary to execute.
+ Some example of systematics LLH scan is also provided in `mach3_LLH_systs.yaml` that makes use of `REPLACE_ID` to replace some field of the input Mach3 yaml configuration file with the jobID. This allows to send jobs each making the LLH variation of a different systematic parameters to easily parallelize this task.
+
+ A typical workflow would be:
+ 1. Building MaCh3 on an AL9 machine
+ 2. Taring it with the `make_tar.sh` script provided in MaCh3_DUNE
+ 3. Editing `mach3_chain.yaml` to modify the output directory, the code archive location, and any executable/config parameter for MaCh3
+ 4. Running `python3 utils/chain-submit.py mach3_chain.yaml new` to check all the parameters are ok and create the output directory structure for the jobs
+ 5. Run `jobsub_q -G dune $USER` to be sure you have the relevant credentials setup to send jobs. Otherwise follow the printed instructions.
+ 6. Run the job sending/managing loop with `while true; do python3 utils/chain-submit.py mach3_chain.yaml; sleep 2m; done`

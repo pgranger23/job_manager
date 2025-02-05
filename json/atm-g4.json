@@ -1,9 +1,0 @@
-{
-  "--group": "dune",
-  "-N": "10",
-  "--expected-lifetime": "24h",
-  "--timeout": "24h",
-  "--memory": "4000",
-  "--OS": "SL7",
-  "file:///${CWD}/../scripts/atm-g4.sh": ["50"]
-}

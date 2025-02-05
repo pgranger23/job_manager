@@ -1,9 +1,0 @@
-{
-  "--group": "dune",
-  "-N": "1",
-  "--expected-lifetime": "1h",
-  "--timeout": "1h",
-  "--memory": "2000",
-  "--OS": "SL7",
-  "file:///${CWD}/../scripts/test.sh": ["1"]
-}
