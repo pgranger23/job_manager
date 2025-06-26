@@ -43,7 +43,14 @@ def save_database(conn, df):
 
 def parse_output(output):
     input = StringIO(output)
-    df = pd.read_csv(input, skipfooter=1, sep='\s+', engine='python', skiprows=1, names=['jobid', 'owner', 'subday', 'subtime', 'runtime', 'status', 'prio', 'size', 'command'])
+    try:
+        df = pd.read_csv(input, skipfooter=1, sep='\s+', engine='python', skiprows=1, names=['jobid', 'owner', 'subday', 'subtime', 'runtime', 'status', 'prio', 'size', 'command'])
+    except Exception as error:
+        print(error)
+        print("Could not parse jobsub_q output ... check output below:")
+        for l in input.readlines():
+            print(l, end='')
+        exit(0)
 
     running = df[df.status != 'H']
     return running
@@ -51,6 +58,7 @@ def parse_output(output):
 def get_jobs():
     output = subprocess.run(["jobsub_q", "-G", "dune", os.getlogin()], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return parse_output(output.stdout.decode("utf-8"))
+
 
 def get_finished(conn):
     jobs = get_jobs()

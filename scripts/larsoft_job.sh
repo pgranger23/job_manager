@@ -73,16 +73,6 @@ if [ ! -z "$DATASET_FILE" ]; then
 	echo "Input file is dataset file $DATASET_FILE"
 
 	IFILE=${DATASET_FILE}
-	#IFILE=$(rucio list-file-replicas ${DATASET_FILE} --pfns | head -1)
-	#IFILE=$(samweb get-file-access-url ${DATASET_FILE})
-
-	#ifdh ls $IFILE 0 || exit 0 #Check that input file exists
-
-	# LOCAL_IDIR=${WORKDIR}/input/
-	# mkdir -p $LOCAL_IDIR
-
-	# LOCAL_IFILE=${LOCAL_IDIR}/input.root
-	# ifdh cp $IFILE $LOCAL_IFILE
 
 	CMD="$CMD -s $IFILE"
 fi
