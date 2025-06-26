@@ -8,7 +8,13 @@
 
 set -x
 
+tar xvf ${CONDOR_DIR_INPUT}/inputs*.tar.gz -C ${CONDOR_DIR_INPUT} #Unpacking the inputs tarball
+
 source ${CONDOR_DIR_INPUT}/job_setup*.sh #Sourcing all the env variables that configure the job
+
+export X509_USER_PROXY=${CONDOR_DIR_INPUT}/jobscript-proxy.pem
+chmod 0400 ${X509_USER_PROXY}
+ls -l ${X509_USER_PROXY} #Check that the proxy is there
 
 WORKDIR=${_CONDOR_SCRATCH_DIR}/work/
 mkdir -p $WORKDIR && cd $WORKDIR
@@ -66,17 +72,19 @@ fi
 if [ ! -z "$DATASET_FILE" ]; then
 	echo "Input file is dataset file $DATASET_FILE"
 
-	IFILE=$(samweb get-file-access-url ${DATASET_FILE})
+	IFILE=${DATASET_FILE}
+	#IFILE=$(rucio list-file-replicas ${DATASET_FILE} --pfns | head -1)
+	#IFILE=$(samweb get-file-access-url ${DATASET_FILE})
 
-	ifdh ls $IFILE 0 || exit 0 #Check that input file exists
+	#ifdh ls $IFILE 0 || exit 0 #Check that input file exists
 
-	LOCAL_IDIR=${WORKDIR}/input/
-	mkdir -p $LOCAL_IDIR
+	# LOCAL_IDIR=${WORKDIR}/input/
+	# mkdir -p $LOCAL_IDIR
 
-	LOCAL_IFILE=${LOCAL_IDIR}/${DATASET_FILE}
-	ifdh cp $IFILE $LOCAL_IFILE
+	# LOCAL_IFILE=${LOCAL_IDIR}/input.root
+	# ifdh cp $IFILE $LOCAL_IFILE
 
-	CMD="$CMD -s $LOCAL_IFILE"
+	CMD="$CMD -s $IFILE"
 fi
 
 if [ ! -z "$OBASENAME" ]; then

@@ -2,7 +2,7 @@
 #######################################################
 # Used env variables:                                 #
 # MAP_FILE ; IDIR ; IBASENAME ; OBASENAME ; ODIR ;    #
-# ADDITIONAL_OUTPUTS ; BINARY ; YAML                  #
+# ADDITIONAL_OUTPUTS ; BINARY ; YAML ; NSTEPS         #
 #######################################################
 
 set -x
@@ -67,6 +67,11 @@ if [ ! -z "$REPLACE_ID" ]; then
 	done
 fi
 
+#Overwrites the number of steps if asked for
+if [ ! -z "$NSTEPS" ]; then
+	sed -i 's#NSteps.*#NSteps: '$NSTEPS'#g' $LOCAL_YAML
+fi
+
 #Configure the output file location
 if [ ! -z "$OBASENAME" ]; then
 	LOCAL_ODIR=${WORKDIR}/output/
@@ -74,6 +79,7 @@ if [ ! -z "$OBASENAME" ]; then
 	LOCAL_OFILE=$LOCAL_ODIR/${OBASENAME}_${ID}.root
 
     sed -i -r 's#^(\s*)FileName.*#\1FileName: '$LOCAL_OFILE'#g' $LOCAL_YAML
+    #sed -i -r 's#^(\s*)OutputFile.*#\1OutputFile: '$LOCAL_OFILE'#g' $LOCAL_YAML #New mach3 naming
 fi
 
 #Print YAML file to debug and check the config

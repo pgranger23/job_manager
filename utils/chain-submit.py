@@ -16,13 +16,14 @@ import logging
 from copy import deepcopy
 from get_jobs import create_connection, create_database, read_database, save_database, get_finished
 import pandas as pd
+import tarfile
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 TEMPLATE_SCRIPT = os.path.realpath(os.path.join(os.path.dirname(__file__), "../scripts/larsoft_job.sh"))
-SAMWEB_EXE = "/cvmfs/fermilab.opensciencegrid.org/products/common/prd/sam_web_client/v3_3/NULL/bin/samweb"
-
+#SAMWEB_EXE = "/cvmfs/fermilab.opensciencegrid.org/products/common/prd/sam_web_client/v3_3/NULL/bin/samweb"
+RUCIO_EXE = "/cvmfs/dune.opensciencegrid.org/products/dune/rucio/v33_3_0/NULL/bin/rucio"
 def get_dataset(dataset:str) -> List[str]:
     logger.info(f"Using dataset {dataset}")
     fname = f"./{dataset}.list"
@@ -31,7 +32,7 @@ def get_dataset(dataset:str) -> List[str]:
         with open(fname) as f:
             filelist = f.read().splitlines()
     else:
-        cmd = f'{SAMWEB_EXE} list-files "defname:{dataset}"'
+        cmd = f'{RUCIO_EXE} -a {os.getlogin()} list-content {dataset} --short'
         ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         ret.check_returncode()
         
@@ -83,7 +84,7 @@ class Step:
     repeat: int = 1
     nevents: int = 50
     nfiles: int = 0
-    debug_output: bool = False
+    debug_output: bool = True
     script: str = TEMPLATE_SCRIPT
     is_larsoft: bool = True
     outputs: List[int] = field(default_factory=list)
@@ -309,18 +310,21 @@ class Process:
 
     def _send_jobs(self, step:Step) -> None:
         map_file = self._create_map(step)
-        map_file_url = f"dropbox://{map_file}"
 
         setup_file = self._create_setup(step, os.path.basename(map_file))
-        setup_file_url = f"dropbox://{setup_file}"
 
-        input_files = [map_file_url, setup_file_url]
+        input_files = [map_file, setup_file]
 
         if step.is_larsoft:
+            if step.dataset != "":
+                #Adding proxy to work on remote files
+                proxy_file = self._get_proxy()
+                input_files.append(proxy_file)
+
             if not os.path.exists(step.fcl):
                 logger.warning(f"{step.fcl} does not exist locally, it is expected to be in FHICLPATH then!")
             else:
-                input_files.append(f'dropbox://{step.fcl}')
+                input_files.append(step.fcl)
         
 
         config = {}
@@ -350,9 +354,21 @@ class Process:
             if not os.path.exists(ifile):
                 logger.critical(f"Input file {ifile} does not exist!")
                 sys.exit()
-            input_files.append(f"dropbox://{ifile}")
+            input_files.append(ifile)
 
-        config["-f"] = input_files
+        #Package the input files together in a temp archive to avoid many transfers
+
+        with NamedTemporaryFile(mode='wb', delete=False, suffix='.tar.gz', prefix='inputs') as handle:
+            with tarfile.open(fileobj=handle, mode='w:gz') as tar:
+                for fname in input_files:
+                    tar.add(fname, arcname=os.path.basename(fname))
+            inputs_archive_name = handle.name
+
+        logger.info(f"Created inputs archive {inputs_archive_name}")
+
+        inputs_archive_name_url = f"dropbox://{inputs_archive_name}"
+
+        config["-f"] = inputs_archive_name_url
         config["-N"] = str(len(step.status.to_process))
 
         bash_script = f"file://{step.script}"
@@ -466,6 +482,16 @@ class Process:
             handle.write('\n'.join(lines))
             fname = handle.name
         return fname
+
+    def _get_proxy(self) -> str:
+        #TODO: Actually implement if working
+        logging.info("Retrieving the proxy file")
+        proxy_filepath = os.path.realpath(os.path.join(os.path.dirname(__file__), "../jobscript-proxy.pem"))
+        cmd = f'justin --verbose get-token'
+        ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, env=dict(os.environ, X509_USER_PROXY=proxy_filepath))
+        ret.check_returncode()
+        logging.info(ret.stdout)
+        return proxy_filepath
 
     def _create_setup(self, step:Step, map_file:str) -> str:
         setup_map = {
