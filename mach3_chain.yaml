@@ -2,20 +2,20 @@
 path:
   - name:         Chain
     odir:         /pnfs/dune/scratch/users/pgranger/mach3/mach3_chains/
-    local_source: /dune/app/users/pgranger/MaCh3_ana/MaCh3_DUNE.tar.gz
+    local_source: /exp/dune/app/users/pgranger/job_monitor/mach3.tar.gz
     script:       ./scripts/mach3_job.sh
     ofile: mach3_chain
-    repeat: 8
+    repeat: 3
     env:
-      YAML: "configs/AtmChain.yaml"
-      BINARY: "./build/src/DUNE_atm_chain"
+      YAML: "configs/EventRates_Atmospherics_restart.yaml"
+      BINARY: "./build/src/Fit"
 
 global:
-  nfiles: 50
+  nfiles: 7
   is_larsoft: False
   job_config:
     group: dune
-    expected-lifetime: 12h
+    expected-lifetime: 10h
     memory: 12000
-    timeout: 12h
-    OS: SL7
+    timeout: 10h
+    append_condor_requirements: '(TARGET.HAS_CVMFS_dune_osgstorage_org==true)'
